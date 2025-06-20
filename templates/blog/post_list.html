@@ -1,0 +1,17 @@
+{% extends 'main.html' %}
+
+{% block content %}
+    {% for post in posts %}
+        {% if post.thumbnail %}
+            <img src="{{ post.thumbnail.url }}" alt="{{ post.title }}" width="150">
+        {% else %}
+            <p>Нет изображения</p>
+        {% endif %}
+        <strong><a href="{% url 'blog:post_detail' post.slug %}">{{ post.title }}</a></strong>
+        <p>{{ post.description }}</p>
+        <small>{{ post.create }}</small>
+        <hr>
+        <span>{{ post.category.title }}</span>
+        <br>
+    {% endfor %}
+{% endblock %}

@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import FileExtensionValidator
 from django.contrib.auth.models import User
+from apps.services.utils import unique_slugify
 
 
 class Post(models.Model):
@@ -13,7 +14,7 @@ class Post(models.Model):
     )
 
     title = models.CharField(verbose_name='Название записи', max_length=255)
-    slug = models.SlugField(verbose_name='URL', max_length=255, blank=True, unique=True)
+    slug = models.SlugField(verbose_name='URL', max_length=255, blank=True)
     description = models.TextField(verbose_name='Краткое описание', max_length=500)
     text = models.TextField(verbose_name='Полный текст записи')
     category = models.ForeignKey(
@@ -28,7 +29,7 @@ class Post(models.Model):
         default='default.jpg',
         verbose_name='Изображение записи',
         blank=True,
-        upload_to='images/thumbnails/',
+        upload_to='images/thumbnails/%Y/%m/%d/',
         validators=[FileExtensionValidator(allowed_extensions=('png', 'jpg', 'webp', 'jpeg', 'gif'))]
     )
     status = models.CharField(choices=STATUS_OPTIONS, default='published', verbose_name='Статус записи', max_length=10)
@@ -49,6 +50,13 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        """
+        При сохранении генерируем слаг и проверяем на уникальность
+        """
+        self.slug = unique_slugify(self, self.title)
+        super().save(*args, **kwargs)
 
 
 class Category(models.Model):
