@@ -7,6 +7,7 @@ class PostListView(ListView):
     template_name = 'blog/post_list.html'
     context_object_name = 'posts'
     paginate_by = 5
+    queryset = Post.custom.all()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -35,7 +36,7 @@ class PostFromCategory(ListView):
         Возвращает рецепты только для текущей категории.
         """
         self.category = get_object_or_404(Category, slug=self.kwargs['slug'])
-        return Post.objects.filter(category=self.category)
+        return Post.custom.filter(category=self.category)
 
     def get_context_data(self, **kwargs):
         """
