@@ -1,0 +1,13 @@
+<div class="card mb-4">
+    <div class="card-header">Категории</div>
+    <div class="card-body ">
+        <ul>
+            {% for category in categories %}
+                <li><a href="{% url 'blog:post_by_category' category.slug %}">{{ category.title }}</a></li>
+            {% empty %}
+                <li>Нет категорий</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+</div>

@@ -6,6 +6,7 @@ class PostListView(ListView):
     model = Post
     template_name = 'blog/post_list.html'
     context_object_name = 'posts'
+    paginate_by = 5
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -27,6 +28,7 @@ class PostFromCategory(ListView):
     template_name = 'blog/post_list.html'
     context_object_name = 'posts'
     category = None
+    paginate_by = 5
 
     def get_queryset(self):
         """
