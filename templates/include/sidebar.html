@@ -1,3 +1,5 @@
+{% load custom_filters %}
+
 <div class="card mb-4">
     <div class="card-header">Категории</div>
     <div class="card-body ">
@@ -8,6 +10,17 @@
                 <li>Нет категорий</li>
             {% endfor %}
         </ul>
+    </div>
+    <div class="card-footer text-center text-muted">
+        На сайте зарегистрировано:
+        <strong style="color: #28a745;">{{ total_users_count }}</strong>
+        пользовател{{ total_users_count|ru_pluralize:'ь,я,ей' }}.<br>
+        Проживают в
+        <strong style="color: #28a745;">{{ unique_cities_count }}</strong>
+        город{{ unique_cities_count|ru_pluralize:'е,ах,ах' }}
+        и
+        <strong style="color: #28a745;">{{ unique_countries_count }}</strong>
+        стран{{ unique_countries_count|ru_pluralize:'е,ах,ах' }}.
     </div>
 
 </div>
