@@ -1,8 +1,9 @@
 from django.urls import reverse_lazy
-from django.views.generic import ListView, DetailView, CreateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from .models import Post, Category
 from django.shortcuts import get_object_or_404
-from .forms import PostCreateForm
+from .forms import PostCreateForm, PostUpdateForm
+
 
 class PostListView(ListView):
     model = Post
@@ -26,6 +27,7 @@ class PostDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         context['title'] = self.object.title
         return context
+
 
 class PostFromCategory(ListView):
     template_name = 'blog/post_list.html'
@@ -64,6 +66,28 @@ class PostCreateView(CreateView):
 
     def form_valid(self, form):
         form.instance.author = self.request.user
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('blog:post_detail', kwargs={'slug': self.object.slug})
+
+
+class PostUpdateView(UpdateView):
+    """
+    Представление: обновления материала на сайте
+    """
+    model = Post
+    template_name = 'blog/post_update.html'
+    context_object_name = 'post'
+    form_class = PostUpdateForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = f'Обновление статьи: {self.object.title}'
+        return context
+
+    def form_valid(self, form):
+        # form.instance.updater = self.request.user
         return super().form_valid(form)
 
     def get_success_url(self):
