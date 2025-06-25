@@ -6,7 +6,7 @@ from apps.services.utils import unique_slugify
 
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='Пользователь')
     slug = models.SlugField(verbose_name='URL', max_length=255, blank=True, unique=True)
     avatar = models.ImageField(
         verbose_name='Аватар',
