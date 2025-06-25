@@ -1,8 +1,11 @@
+from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from .models import Post, Category
 from django.shortcuts import get_object_or_404
 from .forms import PostCreateForm, PostUpdateForm
+from django.contrib.auth.mixins import LoginRequiredMixin
+from ..services.mixins import AuthorRequiredMixin
 
 
 class PostListView(ListView):
@@ -51,13 +54,14 @@ class PostFromCategory(ListView):
         return context
 
 
-class PostCreateView(CreateView):
+class PostCreateView(LoginRequiredMixin, CreateView):
     """
     Представление: создание материалов на сайте
     """
     model = Post
     template_name = 'blog/post_create.html'
     form_class = PostCreateForm
+    login_url = 'blog:home'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -72,7 +76,7 @@ class PostCreateView(CreateView):
         return reverse_lazy('blog:post_detail', kwargs={'slug': self.object.slug})
 
 
-class PostUpdateView(UpdateView):
+class PostUpdateView(AuthorRequiredMixin, SuccessMessageMixin, UpdateView):
     """
     Представление: обновления материала на сайте
     """
@@ -80,6 +84,8 @@ class PostUpdateView(UpdateView):
     template_name = 'blog/post_update.html'
     context_object_name = 'post'
     form_class = PostUpdateForm
+    login_url = 'blog:home'
+    success_message = 'Запись была успешно обновлена!'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -87,7 +93,7 @@ class PostUpdateView(UpdateView):
         return context
 
     def form_valid(self, form):
-        # form.instance.updater = self.request.user
+        form.instance.updater = self.request.user
         return super().form_valid(form)
 
     def get_success_url(self):
