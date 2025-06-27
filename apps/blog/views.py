@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 from django.contrib.messages.views import SuccessMessageMixin
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from .models import Post, Category
 from django.shortcuts import get_object_or_404, redirect
@@ -115,12 +115,20 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         comment = form.save(commit=False)
-        comment.post_id = self.kwargs.get('pk')
+        post_pk = self.kwargs.get('pk')
+        try:
+            post = Post.objects.get(pk=post_pk)
+            comment.post = post
+        except Post.DoesNotExist:
+            if self.is_ajax():
+                return JsonResponse({'error': 'Пост не найден.'}, status=404)
+            return redirect('blog:home')
         comment.author = self.request.user
         comment.parent_id = form.cleaned_data.get('parent')
         comment.save()
 
         if self.is_ajax():
+            profile_url = reverse('accounts:profile_detail', kwargs={'slug': comment.author.profile.slug})
             return JsonResponse({
                 'is_child': comment.is_child_node(),
                 'id': comment.id,
@@ -129,10 +137,15 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
                 'time_create': comment.time_create.strftime('%Y-%b-%d %H:%M:%S'),
                 'avatar': comment.author.profile.avatar.url,
                 'content': comment.content,
-                'get_absolute_url': comment.author.profile.get_absolute_url()
+                'profile_url': profile_url
             }, status=200)
 
         return redirect(comment.post.get_absolute_url())
 
     def handle_no_permission(self):
-        return JsonResponse({'error': 'Необходимо авторизоваться для добавления комментариев'}, status=400)
+        if self.is_ajax():
+            return JsonResponse({'error': 'Необходимо авторизоваться для добавления комментариев'}, status=400)
+        return super().handle_no_permission()
+
+    def get_success_url(self):
+        return reverse_lazy('blog:post_detail', kwargs={'slug': self.object.post.slug})
