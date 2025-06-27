@@ -15,7 +15,7 @@ class Profile(models.Model):
         blank=True,
         validators=[FileExtensionValidator(allowed_extensions=('png', 'jpg', 'jpeg'))]
     )
-    bio = models.TextField(verbose_name='Информация о себе', max_length=500, blank=True)
+    bio = models.TextField(verbose_name='Информация о себе', max_length=500, blank=True, null=True)
     birth_date = models.DateField(verbose_name='Дата рождения', null=True, blank=True)
     country = models.CharField(verbose_name='Страна', max_length=100, blank=True, null=True)
     city = models.CharField(verbose_name='Город', max_length=100, blank=True, null=True)
