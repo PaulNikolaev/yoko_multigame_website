@@ -35,6 +35,12 @@ async function createComment(event) {
             },
             body: new FormData(commentForm),
         });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Server error: ${response.status}`);
+        }
+
         const comment = await response.json();
 
         let commentTemplate = `<ul id="comment-thread-${comment.id}">
@@ -46,7 +52,7 @@ async function createComment(event) {
                                         <div class="col-md-10">
                                             <div class="card-body">
                                                 <h6 class="card-title">
-                                                    <a href="${comment.get_absolute_url}">${comment.author}</a>
+                                                    <a href="${comment.profile_url}">${comment.author}</a>
                                                 </h6>
                                                 <p class="card-text">
                                                     ${comment.content}
@@ -70,6 +76,8 @@ async function createComment(event) {
         commentFormParentInput.value = null;
         replyUser();
     } catch (error) {
-        console.log(error)
+        console.error('Ошибка при создании комментария:', error);
+        commentFormSubmit.disabled = false;
+        commentFormSubmit.innerText = "Добавить комментарий";
     }
 }

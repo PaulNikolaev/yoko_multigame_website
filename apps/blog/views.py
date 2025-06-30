@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404, redirect
 from .forms import PostCreateForm, PostUpdateForm, CommentCreateForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from ..services.mixins import AuthorRequiredMixin
-
+from django.template.defaultfilters import date as date_filter
 
 class PostListView(ListView):
     model = Post
@@ -106,7 +106,7 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
     form_class = CommentCreateForm
 
     def is_ajax(self):
-        return self.request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        return self.request.accepts("application/json") or self.request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
     def form_invalid(self, form):
         if self.is_ajax():
@@ -129,18 +129,19 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 
         if self.is_ajax():
             profile_url = reverse('accounts:profile_detail', kwargs={'slug': comment.author.profile.slug})
+            formatted_time_create = date_filter(comment.time_create, 'j F Y г. H:i')
             return JsonResponse({
                 'is_child': comment.is_child_node(),
                 'id': comment.id,
                 'author': comment.author.username,
                 'parent_id': comment.parent_id,
-                'time_create': comment.time_create.strftime('%Y-%b-%d %H:%M:%S'),
+                'time_create': formatted_time_create,
                 'avatar': comment.author.profile.avatar.url,
                 'content': comment.content,
                 'profile_url': profile_url
             }, status=200)
 
-        return redirect(comment.post.get_absolute_url())
+        return redirect(reverse_lazy('blog:post_detail', kwargs={'slug': comment.post.slug}))
 
     def handle_no_permission(self):
         if self.is_ajax():

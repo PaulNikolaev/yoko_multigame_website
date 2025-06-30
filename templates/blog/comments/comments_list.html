@@ -10,7 +10,9 @@
             <div class="col-md-10">
                 <div class="card-body">
                     <h6 class="card-title">
-                        <a href="{{ node.author.profile.get_absolute_url }}">{{ node.author }}</a>
+
+                        <a href="{% url 'accounts:profile_detail' slug=node.author.profile.slug %}">{{ node.author }}</a>
+
                     </h6>
                     <p class="card-text">
                         {{ node.content }}
@@ -35,7 +37,9 @@
           <h6 class="card-title">
              Форма добавления комментария
           </h6>
-          <form method="post" id="commentForm" name="commentForm" data-post-id="{{ post.pk }}">
+          <form method="post" id="commentForm" name="commentForm" data-post-id="{{ post.pk }}"
+                action="{% url 'blog:comment_create_view' pk=post.pk %}">
+             {% csrf_token %}
              {{ form }}
              <div class="d-grid gap-2 d-md-block mt-2">
                 <button type="submit" class="btn btn-dark" id="commentSubmit">Добавить комментарий</button>
@@ -46,5 +50,5 @@
 {% endif %}
 
 {% block script %}
-<script src="{% static '/comments.js' %}"></script>
+    <script src="{% static 'js/comments.js' %}"></script>
 {% endblock %}
