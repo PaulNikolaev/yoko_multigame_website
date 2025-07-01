@@ -1,7 +1,10 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
+from django.urls import reverse_lazy
 from .models import Profile
+from django_countries.widgets import CountrySelectWidget
+from django_select2.forms import Select2Widget
 
 
 class UserUpdateForm(forms.ModelForm):
@@ -39,19 +42,31 @@ class ProfileUpdateForm(forms.ModelForm):
     Форма обновления данных профиля пользователя
     """
     birth_date = forms.DateField(label='Дата рождения',
-                                 widget=forms.TextInput(attrs={"class": "form-control mb-1"}))
-    bio = forms.CharField(max_length=500,
-                          label='Информация о себе',
-                          widget=forms.Textarea(attrs={'rows': 5, "class": "form-control mb-1"}))
-
-    avatar = forms.ImageField(label='Аватар', widget=forms.FileInput(attrs={"class": "form-control mb-1"}))
-    country = forms.CharField(label='Страна', max_length=100,
-                              widget=forms.TextInput(attrs={"class": "form-control mb-1"}))
-    city = forms.CharField(label='Город', max_length=100, widget=forms.TextInput(attrs={"class": "form-control mb-1"}))
+                                 input_formats=['%d.%m.%Y', '%Y-%m-%d'],
+                                 widget=forms.DateInput(attrs={
+                                     "class": "form-control mb-1 datepicker",
+                                     "placeholder": "ДД.ММ.ГГГГ"
+                                 }))
 
     class Meta:
         model = Profile
         fields = ('birth_date', 'bio', 'avatar', 'country', 'city')
+        widgets = {
+            'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'avatar': forms.FileInput(attrs={'class': 'form-control'}),
+            'country': CountrySelectWidget(attrs={'class': 'form-control select2-enabled'}),
+            'city': Select2Widget(attrs={
+                'data-placeholder': 'Начните вводить название города...',
+                'class': 'form-control select2-enabled',
+                'data-city-autocomplete-url': reverse_lazy('accounts:city_autocomplete_ajax')
+            }),
+        }
+        labels = {
+            'bio': 'Информация о себе',
+            'avatar': 'Аватар',
+            'country': 'Страна',
+            'city': 'Город',
+        }
 
 
 class UserRegisterForm(UserCreationForm):

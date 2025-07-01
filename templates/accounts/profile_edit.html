@@ -1,19 +1,116 @@
 {% extends 'main.html' %}
+{% load static %}
 
 {% block content %}
-<div class="card mb-3 border-0 nth-shadow">
-   <div class="card-body">
-      <div class="card-title nth-card-title">
-         <h4>Изменение профиля</h4>
-      </div>
-      <form method="post" enctype="multipart/form-data">
-         {% csrf_token %}
-         {{ user_form.as_p }}
-         {{ form.as_p }}
-         <div class="d-grid gap-2 d-md-block mt-2">
-            <button type="submit" class="btn btn-dark">Подтвердить изменение профиля</button>
-         </div>
-      </form>
-   </div>
-</div>
+    <div class="card mb-3 border-0 nth-shadow">
+        <div class="card-body">
+            <div class="card-title nth-card-title">
+                <h4>Изменение профиля</h4>
+            </div>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                {# Форма пользователя #}
+                <fieldset class="form-group mb-4">
+                    <legend class="border-bottom mb-4">Данные пользователя</legend>
+                    {% for field in user_form %}
+                        <div class="mb-3">
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {% if field.help_text %}
+                                <small class="form-text text-muted">{{ field.help_text }}</small>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </fieldset>
+
+                {# Форма профиля (ProfileUpdateForm) #}
+                <fieldset class="form-group">
+                    <legend class="border-bottom mb-4">Информация профиля</legend>
+
+                    {# Поле Аватар #}
+                    <div class="mb-3">
+                        {{ form.avatar.label_tag }}
+                        {{ form.avatar }}
+                        {% if form.instance.avatar %}
+                            <small class="form-text text-muted">Текущий аватар: <img
+                                    src="{{ form.instance.avatar.url }}" alt="Текущий аватар" class="img-thumbnail"
+                                    style="width: 50px; height: 50px; object-fit: cover;"></small>
+                        {% endif %}
+                        {% for error in form.avatar.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    {# Поле Дата рождения #}
+                    <div class="mb-3">
+                        {{ form.birth_date.label_tag }}
+                        {{ form.birth_date }}
+                        {% for error in form.birth_date.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    {# Поле Страна #}
+                    <div class="mb-3">
+                        {{ form.country.label_tag }}
+                        {{ form.country }}
+                        {% for error in form.country.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    {# Поле Город #}
+                    <div class="mb-3">
+                        <label for="{{ form.city.id_for_label }}" class="form-label">{{ form.city.label }}</label>
+                        {{ form.city }}
+                        {% if form.instance.city %}
+                            <input type="hidden" id="city_initial_value" data-initial-city="{{ form.instance.city }}">
+                        {% endif %}
+                        {% if form.city.errors %}
+                            <div class="text-danger">{{ form.city.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    {# Поле Информация о себе (Bio) #}
+                    <div class="mb-3">
+                        {{ form.bio.label_tag }}
+                        {{ form.bio }}
+                        {% for error in form.bio.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                </fieldset>
+
+                {# Общие ошибки формы #}
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger mt-3">
+                        {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                {% if user_form.non_field_errors %}
+                    <div class="alert alert-danger mt-3">
+                        {% for error in user_form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="d-grid gap-2 d-md-block mt-4">
+                    <button type="submit" class="btn btn-dark">Подтвердить изменение профиля</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block script %}
+    {{ block.super }}
+    <script src="{% static 'js/profile_scripts.js' %}"></script>
 {% endblock %}

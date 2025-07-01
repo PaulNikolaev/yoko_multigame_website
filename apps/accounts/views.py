@@ -1,10 +1,13 @@
-from django.views.generic import DetailView, UpdateView, CreateView
+from django.views.generic import DetailView, UpdateView, CreateView, View
 from django.db import transaction
 from django.urls import reverse_lazy
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.views import LoginView, LogoutView
+from django.http import JsonResponse
 from .models import Profile
 from .forms import UserUpdateForm, ProfileUpdateForm, UserRegisterForm, UserLoginForm
+from cities_light.models import City, Country
+from django.db.models import Q
 
 
 class ProfileDetailView(DetailView):
@@ -94,3 +97,36 @@ class UserLogoutView(LogoutView):
     Выход с сайта
     """
     next_page = 'blog:home'
+
+
+class CityAutocompleteAjaxView(View):
+    def get(self, request, *args, **kwargs):
+        term = request.GET.get('term', '')
+        country_code = request.GET.get('country_id')
+
+        cities = City.objects.all()
+
+        if country_code:
+            try:
+                country_obj = Country.objects.get(code2=country_code)
+                cities = cities.filter(country=country_obj)
+            except Country.DoesNotExist:
+                return JsonResponse({'results': []})
+            except Exception as e:
+                print(f"Ошибка при поиске страны: {e}")
+                return JsonResponse({'results': []})
+
+        cities = cities.filter(
+            Q(name__icontains=term) | Q(alternate_names__icontains=term)
+        ).select_related('country').order_by('name')
+
+        results = []
+        for city in cities[:50]:
+            final_display_name = city.alternate_names if city.alternate_names else city.name
+
+            results.append({
+                'id': final_display_name,
+                'text': final_display_name
+            })
+
+        return JsonResponse({'results': results})

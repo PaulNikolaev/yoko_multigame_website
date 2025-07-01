@@ -46,11 +46,15 @@ INSTALLED_APPS = [
     'apps.accounts',
     'mptt',
     'django_mptt_admin',
+    'django_countries',
+    'cities_light',
+    'django_select2',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -80,7 +84,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'yoko_multigame_website.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
@@ -94,7 +97,6 @@ DATABASES = {
         "PORT": os.getenv("DB_PORT"),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -114,11 +116,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'ru'
+LANGUAGE_CODE = 'ru-ru'
 
 TIME_ZONE = 'Europe/Moscow'
 
@@ -126,6 +127,10 @@ USE_I18N = True
 
 USE_TZ = True
 
+LANGUAGES = [
+    ('ru', 'Русский'),
+    ('en', 'English'),
+]
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
@@ -133,8 +138,8 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = (BASE_DIR / 'staticfiles_collected')
 STATICFILES_DIRS = [
-    BASE_DIR / 'static', # <-- ИЗМЕНЕНО! Или можно оставить BASE_DIR / 'static',
-                              #    если вы переименуете предыдущую 'static' в 'static_dev'
+    BASE_DIR / 'static',
+
 ]
 
 MEDIA_ROOT = (BASE_DIR / 'media')
@@ -144,3 +149,8 @@ MEDIA_URL = '/media/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Настройки для django-cities-light
+CITIES_LIGHT_TRANSLATION_LANGUAGES = ['ru', 'en']
+CITIES_LIGHT_INCLUDE_CITY_TYPES = ['PPL', 'PPLA', 'PPLA2', 'PPLA3', 'PPLA4', 'PPLC', 'PPLF', 'PPLG', 'PPLH', 'PPLL',
+                                   'PPLR', 'PPLS', 'PPLW', 'PPLX', 'STLMT']

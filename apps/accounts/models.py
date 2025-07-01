@@ -1,8 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import FileExtensionValidator
-from django.urls import reverse
 from apps.services.utils import unique_slugify
+from django_countries.fields import CountryField
 
 
 class Profile(models.Model):
@@ -17,7 +17,7 @@ class Profile(models.Model):
     )
     bio = models.TextField(verbose_name='Информация о себе', max_length=500, blank=True, null=True)
     birth_date = models.DateField(verbose_name='Дата рождения', null=True, blank=True)
-    country = models.CharField(verbose_name='Страна', max_length=100, blank=True, null=True)
+    country = CountryField(verbose_name='Страна', blank=True, null=True)
     city = models.CharField(verbose_name='Город', max_length=100, blank=True, null=True)
 
     class Meta:

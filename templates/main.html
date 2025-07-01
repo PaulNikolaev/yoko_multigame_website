@@ -4,19 +4,29 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ title }}</title>
+
+    {# Подключаем Bootstrap CSS #}
     {% load django_bootstrap5 %}
     {% bootstrap_css %}
-    {% bootstrap_javascript %}
+
+    {# Подключаем Flatpickr CSS #}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    
+    {# Подключаем Select2 CSS #}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    {% block extra_head %}
+    {% endblock %}
 </head>
 <body class="d-flex flex-column min-vh-100">
 {% include 'includes/header.html' %}
 <div class="container">
     <div class="row">
         <div class="col-lg-8 p-4">
-        {% include 'includes/messages.html' %}
+            {% include 'includes/messages.html' %}
             {% block content %}
             {% endblock %}
-        {% include 'includes/pagination.html' %}
+            {% include 'includes/pagination.html' %}
         </div>
         <div class="col-4 p-4">
             {% include 'includes/sidebar.html' %}
@@ -24,6 +34,20 @@
     </div>
 </div>
 {% include 'includes/footer.html' %}
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+{# Подключаем Bootstrap #}
+{% bootstrap_javascript %}
+
+{# Подключаем Flatpickr JavaScript и его локализацию #}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
+
+{# Подключаем Select2 JavaScript и его локализацию #}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/ru.js"></script>
+
 <script src="{% static 'js/backend.js' %}"></script>
 {% block script %}{% endblock %}
 </body>
