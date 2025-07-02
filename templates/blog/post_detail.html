@@ -1,44 +1,60 @@
 {% extends 'main.html' %}
 {% load mptt_tags %}
 {% load static %}
+{% load rating_tags %}
+
 {% block content %}
-<div class="card mb-3">
-    <div class="row">
-        <div class="col-4">
-            {% if post.thumbnail %}
-                <img src="{{ post.thumbnail.url }}" class="card-img-top" alt="{{ post.title }}">
-            {% else %}
-                <div class="d-flex align-items-center justify-content-center h-100">
-                    <p>Нет изображения</p>
+    <div class="card mb-3">
+        <div class="row">
+            <div class="col-4">
+                {% if post.thumbnail %}
+                    <img src="{{ post.thumbnail.url }}" class="card-img-top" alt="{{ post.title }}">
+                {% else %}
+                    <div class="d-flex align-items-center justify-content-center h-100">
+                        <p>Нет изображения</p>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="col-8">
+                <div class="card-body">
+                    <h5>{{ post.title }}</h5>
+                    <p class="card-text">{{ post.description }}</p>
+                    <p class="card-text">{{ post.text }}</p>
+                    Категория:
+                    <a href="{% url 'blog:post_by_category' post.category.slug %}">
+                        {{ post.category.title }}
+                    </a> / Добавил: {{ post.author.username }} / <small>{{ post.time_create }}</small>
                 </div>
-            {% endif %}
-        </div>
-        <div class="col-8">
-            <div class="card-body">
-                <h5>{{ post.title }}</h5>
-                <p class="card-text">{{ post.description }}</p>
-                <p class="card-text">{{ post.text }}</p>
-                Категория:
-                <a href="{% url 'blog:post_by_category' post.category.slug %}">
-                    {{ post.category.title }}
-                </a> / Добавил: {{ post.author.username }} / <small>{{ post.time_create }}</small>
             </div>
         </div>
+        {# Контейнер для кнопок рейтинга, чтобы JS мог его легко найти #}
+        <div class="rating-buttons" data-post-id="{{ post.id }}">
+            {# Используем наш пользовательский тег для получения значения #}
+            {# Он сам вернет пустую строку, если пользователь не аутентифицирован или не голосовал #}
+            {% get_user_rating_value post request.user as current_vote %}
+
+            <button class="btn btn-sm btn-outline-success like-button" data-value="1"
+                    data-current-vote="{{ current_vote }}">
+                👍
+            </button>
+            <button class="btn btn-sm btn-outline-danger dislike-button" data-value="-1"
+                    data-current-vote="{{ current_vote }}">
+                👎
+            </button>
+            <span class="rating-sum badge bg-secondary ms-2">{{ post.get_sum_rating }}</span>
+        </div>
     </div>
-    <div class="rating-buttons">
-        <button class="btn btn-sm btn-primary" data-post="{{ post.id }}" data-value="1">Лайк</button>
-        <button class="btn btn-sm btn-secondary" data-post="{{ post.id }}" data-value="-1">Дизлайк</button>
-        <button class="btn btn-sm btn-secondary rating-sum">{{ post.get_sum_rating }}</button>
+    <div class="card border-0">
+        <div class="card-body">
+            <h5 class="card-title">
+                Комментарии
+            </h5>
+            {% include 'blog/comments/comments_list.html' %}
+        </div>
     </div>
-</div>
-<div class="card border-0">
-    <div class="card-body">
-        <h5 class="card-title">
-            Комментарии
-        </h5>
-        {% include 'blog/comments/comments_list.html' %}
-    </div>
-</div>
+{% endblock %}
+
+{% block extra_js %}
+    {# Подключаем скрипт для рейтинга в блоке extra_js #}
     <script src="{% static 'js/ratings.js' %}"></script>
-{% block script %}{% endblock %}
 {% endblock %}

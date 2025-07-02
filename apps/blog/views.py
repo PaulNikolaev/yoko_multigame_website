@@ -154,27 +154,41 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
         return reverse_lazy('blog:post_detail', kwargs={'slug': self.object.post.slug})
 
 
-class RatingCreateView(View):
+class RatingCreateView(LoginRequiredMixin, View):  # LoginRequiredMixin уже требует аутентификацию
     model = Rating
 
     def post(self, request, *args, **kwargs):
+        # LoginRequiredMixin уже позаботился о неаутентифицированных пользователях,
+        # так что эта проверка обычно не нужна здесь, но как страховка не помешает.
+        if not request.user.is_authenticated:
+            return JsonResponse({'error': 'Вы должны быть зарегистрированы, чтобы ставить оценки.'}, status=403)
+
         post_id = request.POST.get('post_id')
         value = int(request.POST.get('value'))
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        ip = x_forwarded_for.split(',')[0] if x_forwarded_for else request.META.get('REMOTE_ADDR')
-        user = request.user if request.user.is_authenticated else None
 
+        try:
+            post = Post.objects.get(pk=post_id)
+        except Post.DoesNotExist:
+            return JsonResponse({'error': 'Запись не найдена.'}, status=404)
+
+        # Логика упрощается: всегда ищем по post и user, так как это unique_together
+        # и пользователь всегда аутентифицирован.
         rating, created = self.model.objects.get_or_create(
-            post_id=post_id,
-            ip_address=ip,
-            defaults={'value': value, 'user': user},
+            post=post,
+            user=request.user,  # Теперь это наша уникальная пара
+            defaults={'value': value}  # Значение для новой записи
         )
 
         if not created:
+            # Рейтинг уже существовал для этого пользователя и поста
             if rating.value == value:
+                # Если пользователь нажал ту же кнопку: отменяем голос
                 rating.delete()
             else:
+                # Если пользователь нажал другую кнопку: меняем голос
                 rating.value = value
-                rating.user = user
                 rating.save()
-        return JsonResponse({'rating_sum': rating.post.get_sum_rating()})
+
+        # Обновляем объект post, чтобы получить актуальную сумму рейтинга
+        post.refresh_from_db()
+        return JsonResponse({'rating_sum': post.get_sum_rating()})

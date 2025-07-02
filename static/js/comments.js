@@ -30,6 +30,8 @@ async function createComment(event) {
         const response = await fetch(`/post/${commentPostId}/comments/create/`, {
             method: 'POST',
             headers: {
+                // Здесь csrftoken теперь будет браться из глобальной области видимости,
+                // куда его поместит backend.js
                 'X-CSRFToken': csrftoken,
                 'X-Requested-With': 'XMLHttpRequest',
             },

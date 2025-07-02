@@ -1,8 +1,8 @@
 {% extends 'main.html' %}
+{% load static %}
+{% load rating_tags %}
 
 {% block content %}
-    {% load static %}
-    
     {% for post in posts %}
         <div class="card mb-3">
             <div class="row">
@@ -22,19 +22,28 @@
                         </h5>
                         <p class="card-text">{{ post.description }}</p>
                         <small>Добавил {{ post.author.username }}, {{ post.create }}</small>
-                        в категорию: <a href="{% url 'blog:post_by_category' post.category.slug %}">{{ post.category.title }}</a>
+                        в категорию: <a
+                            href="{% url 'blog:post_by_category' post.category.slug %}">{{ post.category.title }}</a>
                     </div>
                 </div>
-                <div class="rating-buttons">
-                    <button class="btn btn-sm btn-primary" data-post="{{ post.id }}" data-value="1">Лайк</button>
-                    <button class="btn btn-sm btn-secondary" data-post="{{ post.id }}" data-value="-1">Дизлайк
-                    </button>
-                    <button class="btn btn-sm btn-secondary rating-sum">{{ post.get_sum_rating }}</button>
-                </div>
+            </div>
+            <div class="rating-buttons" data-post-id="{{ post.id }}">
+                {% get_user_rating_value post request.user as current_vote %}
+
+                <button class="btn btn-sm btn-outline-success like-button" data-value="1"
+                        data-current-vote="{{ current_vote }}">
+                    👍
+                </button>
+                <button class="btn btn-sm btn-outline-danger dislike-button" data-value="-1"
+                        data-current-vote="{{ current_vote }}">
+                    👎
+                </button>
+                <span class="rating-sum badge bg-secondary ms-2">{{ post.get_sum_rating }}</span>
             </div>
         </div>
     {% endfor %}
-    <script src="{% static 'js/ratings.js' %}"></script>
-{% block script %}{% endblock %}
 {% endblock %}
 
+{% block extra_js %}
+    <script src="{% static 'js/ratings.js' %}"></script>
+{% endblock %}

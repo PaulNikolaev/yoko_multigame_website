@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Sum
 from django.core.validators import FileExtensionValidator
 from django.contrib.auth.models import User
 from mptt.fields import TreeForeignKey
@@ -76,7 +77,7 @@ class Post(models.Model):
         super().save(*args, **kwargs)
 
     def get_sum_rating(self):
-        return sum([rating.value for rating in self.rating.all()])
+        return self.rating.aggregate(total_rating=Sum('value'))['total_rating'] or 0
 
 
 class Category(models.Model):
@@ -145,16 +146,15 @@ class Rating(models.Model):
     """
     post = models.ForeignKey(to=Post, verbose_name='Запись', on_delete=models.CASCADE, related_name='rating')
     user = models.ForeignKey(to=User, verbose_name='Пользователь', on_delete=models.CASCADE, blank=True, null=True)
-    value = models.IntegerField(verbose_name='Значение', choices=[(1, 'Нравится'), (0, 'Не нравится')])
+    value = models.IntegerField(verbose_name='Значение', choices=[(1, 'Нравится'), (-1, 'Не нравится')])
     time_create = models.DateTimeField(verbose_name='Время добавления', auto_now_add=True)
-    ip_address = models.GenericIPAddressField(verbose_name='IP адрес')
 
     class Meta:
-        unique_together = ('post', 'ip_address')
+        unique_together = ('post', 'user')
         ordering = ('-time_create',)
         indexes = [models.Index(fields=['time_create', 'value'])]
         verbose_name = 'Рейтинг'
         verbose_name_plural = 'Рейтинги'
 
     def __str__(self):
-        return self.post.title
+        return f"Рейтинг для {self.post.title} от {self.user.username}"
