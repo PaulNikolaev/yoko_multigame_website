@@ -4,7 +4,8 @@ from .views import (PostListView,
                     PostFromCategory,
                     PostCreateView,
                     PostUpdateView,
-                    CommentCreateView)
+                    CommentCreateView,
+                    RatingCreateView)
 
 app_name = 'blog'
 urlpatterns = [
@@ -14,4 +15,5 @@ urlpatterns = [
     path('post/<slug:slug>', PostDetailView.as_view(), name='post_detail'),
     path('post/<int:pk>/comments/create/', CommentCreateView.as_view(), name='comment_create_view'),
     path('category/<slug:slug>/', PostFromCategory.as_view(), name='post_by_category'),
+    path('rating/', RatingCreateView.as_view(), name='rating'),
 ]

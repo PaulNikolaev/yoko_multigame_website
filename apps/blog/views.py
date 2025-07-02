@@ -1,13 +1,14 @@
 from django.http import JsonResponse
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy, reverse
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
-from .models import Post, Category
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, View
+from .models import Post, Category, Rating
 from django.shortcuts import get_object_or_404, redirect
 from .forms import PostCreateForm, PostUpdateForm, CommentCreateForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from ..services.mixins import AuthorRequiredMixin
 from django.template.defaultfilters import date as date_filter
+
 
 class PostListView(ListView):
     model = Post
@@ -106,7 +107,8 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
     form_class = CommentCreateForm
 
     def is_ajax(self):
-        return self.request.accepts("application/json") or self.request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        return self.request.accepts("application/json") or self.request.headers.get(
+            'X-Requested-With') == 'XMLHttpRequest'
 
     def form_invalid(self, form):
         if self.is_ajax():
@@ -150,3 +152,29 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse_lazy('blog:post_detail', kwargs={'slug': self.object.post.slug})
+
+
+class RatingCreateView(View):
+    model = Rating
+
+    def post(self, request, *args, **kwargs):
+        post_id = request.POST.get('post_id')
+        value = int(request.POST.get('value'))
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        ip = x_forwarded_for.split(',')[0] if x_forwarded_for else request.META.get('REMOTE_ADDR')
+        user = request.user if request.user.is_authenticated else None
+
+        rating, created = self.model.objects.get_or_create(
+            post_id=post_id,
+            ip_address=ip,
+            defaults={'value': value, 'user': user},
+        )
+
+        if not created:
+            if rating.value == value:
+                rating.delete()
+            else:
+                rating.value = value
+                rating.user = user
+                rating.save()
+        return JsonResponse({'rating_sum': rating.post.get_sum_rating()})
