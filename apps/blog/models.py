@@ -12,12 +12,17 @@ class PostManager(models.Manager):
     """
     Кастомный менеджер для модели постов
     """
-
     def get_queryset(self):
-        """
-        Список постов (SQL запрос с фильтрацией по статусу опубликованно)
-        """
-        return super().get_queryset().select_related('author', 'category').filter(status='published')
+        return super().get_queryset().select_related('author', 'category')
+
+    def published(self):
+        return self.get_queryset().filter(status='published')
+
+    def draft(self):
+        return self.get_queryset().filter(status='draft')
+
+    def fixed_posts(self):
+        return self.get_queryset().filter(fixed=True)
 
 
 class Post(models.Model):
