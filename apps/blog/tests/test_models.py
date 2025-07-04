@@ -462,3 +462,24 @@ class CommentModelTest(TestCase):
 
         self.assertFalse(Comment.objects.filter(pk=root_comment_for_delete.pk).exists())
         self.assertFalse(Comment.objects.filter(pk=child_comment_for_delete.pk).exists())
+
+    def test_mptt_properties(self):
+        """
+        Проверяет свойства MPTT-модели
+        """
+        # MPTT-свойства автоматически заполняются MPTT.
+        self.assertIsNotNone(self.root_comment.tree_id)
+        self.assertIsNotNone(self.root_comment.lft)
+        self.assertIsNotNone(self.root_comment.rght)
+        self.assertEqual(self.root_comment.level, 0)
+
+        self.assertIsNotNone(self.child_comment.tree_id)
+        self.assertIsNotNone(self.child_comment.lft)
+        self.assertIsNotNone(self.child_comment.rght)
+        self.assertEqual(self.child_comment.level, 1)
+
+        # Убедимся, что они в одном дереве
+        self.assertEqual(self.root_comment.tree_id, self.child_comment.tree_id)
+        # Проверка порядка lft/rght (дочерний внутри родительского)
+        self.assertTrue(self.root_comment.lft < self.child_comment.lft)
+        self.assertTrue(self.root_comment.rght > self.child_comment.rght)
