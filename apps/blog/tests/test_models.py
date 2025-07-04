@@ -2,11 +2,8 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.db.models import Sum
-from unicodedata import category
 
-from apps.blog.models import Post, Category, Rating
-from apps.services.utils import unique_slugify
+from apps.blog.models import Post, Category, Comment, Rating
 import os
 
 User = get_user_model()
@@ -71,7 +68,7 @@ class PostModelTest(TestCase):
 
         # 2. Создаем второй пост с тем же заголовком, чтобы проверить уникальность слага
         new_post_with_same_title = Post.objects.create(
-            title='Тестовый Заголовок Поста',  # Тот же заголовок
+            title='Тестовый Заголовок Поста',
             description='Второе описание.',
             text='Второй текст.',
             author=self.user,
@@ -203,7 +200,8 @@ class PostModelTest(TestCase):
         author_to_delete.delete()
 
         post_by_deleted_author.refresh_from_db()
-        self.assertEqual(post_by_deleted_author.author, self.user)
+        self.assertIsNone(post_by_deleted_author.author)
+        self.assertTrue(Post.objects.filter(pk=post_by_deleted_author.pk).exists())
 
     def test_updater_on_delete_set_null(self):
         """
@@ -344,3 +342,61 @@ class CategoryModelTest(TestCase):
 
         category_explicit_blank_desc = Category.objects.create(title='Explicit Blank', description='')
         self.assertEqual(category_explicit_blank_desc.description, '')
+
+
+class CommentModelTest(TestCase):
+    """
+    Набор тестов для модели Comment.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        """
+        Метод для настройки данных, которые будут использоваться во всех тестах.
+        """
+        cls.user = User.objects.create_user(username='test_comment_user', password='password')
+        cls.category = Category.objects.create(title='Тестовая Категория Комментариев')
+        cls.post = Post.objects.create(
+            title='Тестовый Пост Для Комментариев',
+            description='Описание.',
+            text='Текст поста.',
+            author=cls.user,  # <--- Убедитесь, что здесь автор указан
+            category=cls.category,
+            status='published'
+        )
+
+        # Создаем корневой комментарий
+        cls.root_comment = Comment.objects.create(
+            post=cls.post,
+            author=cls.user,  # <--- Убедитесь, что здесь автор указан
+            content='Это корневой комментарий.',
+            status='published'
+        )
+
+        # Создаем дочерний комментарий
+        cls.child_comment = Comment.objects.create(
+            post=cls.post,
+            author=cls.user,  # <--- Убедитесь, что здесь автор указан
+            content='Это ответ на корневой комментарий.',
+            status='published',
+            parent=cls.root_comment
+        )
+
+    def test_comment_creation(self):
+        """
+        Проверяет корректность создания объекта Comment и его атрибутов.
+        """
+        comment = self.root_comment
+        self.assertTrue(isinstance(comment, Comment))
+        self.assertEqual(comment.post, self.post)
+        self.assertEqual(comment.author, self.user)
+        self.assertEqual(comment.content, 'Это корневой комментарий.')
+        self.assertEqual(comment.status, 'published')
+        self.assertIsNotNone(comment.time_create)
+        self.assertIsNotNone(comment.time_update)
+        self.assertIsNone(comment.parent)  # Корневой комментарий не имеет родителя
+
+        # Проверка дочернего комментария
+        child_comment = self.child_comment
+        self.assertEqual(child_comment.parent, self.root_comment)
+        self.assertEqual(child_comment.level, 1)

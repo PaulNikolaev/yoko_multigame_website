@@ -12,6 +12,7 @@ class PostManager(models.Manager):
     """
     Кастомный менеджер для модели постов
     """
+
     def get_queryset(self):
         return super().get_queryset().select_related('author', 'category')
 
@@ -56,8 +57,8 @@ class Post(models.Model):
     status = models.CharField(choices=STATUS_OPTIONS, default='published', verbose_name='Статус записи', max_length=10)
     create = models.DateTimeField(verbose_name='Время добавления', auto_now_add=True)
     update = models.DateTimeField(verbose_name='Время изменения', auto_now=True)
-    author = models.ForeignKey(to=User, verbose_name='Автор', on_delete=models.SET_DEFAULT, related_name='author_posts',
-                               default=1)
+    author = models.ForeignKey(to=User, verbose_name='Автор', on_delete=models.SET_NULL, related_name='author_posts',
+                               null=True)
     updater = models.ForeignKey(to=User, verbose_name='Обновил', on_delete=models.SET_NULL, null=True,
                                 related_name='updater_posts', blank=True)
     fixed = models.BooleanField(verbose_name='Прикреплено', default=False)
