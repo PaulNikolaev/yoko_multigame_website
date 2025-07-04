@@ -328,3 +328,9 @@ class CategoryModelTest(TestCase):
         self.assertNotEqual(category_with_same_title.slug, 'testovaya-kategoriya')
         self.assertTrue(category_with_same_title.slug, 'testovaya-kategoriya')
 
+    def test_str_representation(self):
+        """
+        Проверяет корректность метода __str__.
+        """
+        self.assertEqual(str(self.category), self.category_data['title'])
+
