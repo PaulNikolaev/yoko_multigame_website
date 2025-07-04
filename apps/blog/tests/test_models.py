@@ -71,7 +71,7 @@ class PostModelTest(TestCase):
 
         # 2. Создаем второй пост с тем же заголовком, чтобы проверить уникальность слага
         new_post_with_same_title = Post.objects.create(
-            title='Тестовый Заголовок Поста', # Тот же заголовок
+            title='Тестовый Заголовок Поста',  # Тот же заголовок
             description='Второе описание.',
             text='Второй текст.',
             author=self.user,
@@ -84,7 +84,6 @@ class PostModelTest(TestCase):
         parts = new_post_with_same_title.slug.split('-')
         self.assertEqual(len(parts[-1]), 8)
         self.assertTrue(all(c in '0123456789abcdef' for c in parts[-1]))
-
 
         # 3. Проверяем, что при изменении заголовка слаг обновляется
         post_for_slug_check = Post.objects.create(
@@ -283,6 +282,7 @@ class CategoryModelTest(TestCase):
     """
     Набор тестов для модели Category.
     """
+
     @classmethod
     def setUpTestData(cls):
         """
@@ -334,3 +334,13 @@ class CategoryModelTest(TestCase):
         """
         self.assertEqual(str(self.category), self.category_data['title'])
 
+    def test_blank_and_null_fields(self):
+        """
+        Проверяет, что поля description и slug корректно обрабатываются с blank/null.
+        """
+        category_blank_fields = Category.objects.create(title='Категория С Пустыми Полями')
+        self.assertIsNotNone(category_blank_fields.slug)
+        self.assertEqual(category_blank_fields.description, 'Нет описания')
+
+        category_explicit_blank_desc = Category.objects.create(title='Explicit Blank', description='')
+        self.assertEqual(category_explicit_blank_desc.description, '')
