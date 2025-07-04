@@ -1,10 +1,12 @@
+import os
+import time
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from apps.blog.models import Post, Category, Comment, Rating
-import os
+
 
 User = get_user_model()
 
@@ -372,7 +374,7 @@ class CommentModelTest(TestCase):
             content='Это корневой комментарий.',
             status='published'
         )
-
+        time.sleep(0.05)
         # Создаем дочерний комментарий
         cls.child_comment = Comment.objects.create(
             post=cls.post,
@@ -483,3 +485,31 @@ class CommentModelTest(TestCase):
         # Проверка порядка lft/rght (дочерний внутри родительского)
         self.assertTrue(self.root_comment.lft < self.child_comment.lft)
         self.assertTrue(self.root_comment.rght > self.child_comment.rght)
+
+    def test_comment_ordering(self):
+        """
+        Проверяет сортировку комментариев по -time_create (от нового к старому).
+        """
+        # Создадим несколько комментариев для того же поста
+        time.sleep(0.01)
+        comment_oldest = Comment.objects.create(
+            post=self.post, author=self.user, content='Самый старый', status='published'
+        )
+        time.sleep(0.01)
+        comment_middle = Comment.objects.create(
+            post=self.post, author=self.user, content='Средний', status='published'
+        )
+        time.sleep(0.01)
+        comment_newest = Comment.objects.create(
+            post=self.post, author=self.user, content='Самый новый', status='published'
+        )
+
+        all_comments = Comment.objects.filter(post=self.post).order_by('-time_create')
+
+        self.assertEqual(len(all_comments), 5)
+
+        self.assertEqual(all_comments[0], comment_newest)
+        self.assertEqual(all_comments[1], comment_middle)
+        self.assertEqual(all_comments[2], comment_oldest)
+        self.assertEqual(all_comments[3], self.child_comment)
+        self.assertEqual(all_comments[4], self.root_comment)
