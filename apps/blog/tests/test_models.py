@@ -427,3 +427,38 @@ class CommentModelTest(TestCase):
         """
         expected_str = f'{self.root_comment.author}:{self.root_comment.content}'
         self.assertEqual(str(self.root_comment), expected_str)
+
+    def test_comment_relationships(self):
+        """
+        Проверяет связи комментария с Post и User, а также древовидную структуру.
+        """
+        # Проверка связи Post -> Comments
+        self.assertEqual(self.post.comments.count(), 2)
+        self.assertIn(self.root_comment, self.post.comments.all())
+        self.assertIn(self.child_comment, self.post.comments.all())
+
+        # Проверка связи User -> Comments
+        self.assertEqual(self.user.comments_author.count(), 2)
+        self.assertIn(self.root_comment, self.user.comments_author.all())
+        self.assertIn(self.child_comment, self.user.comments_author.all())
+
+        # Проверка древовидной структуры (parent/children)
+        self.assertEqual(self.root_comment.children.count(), 1)
+        self.assertIn(self.child_comment, self.root_comment.children.all())
+        self.assertIsNone(self.root_comment.parent)
+
+        # Проверим, что при удалении родительского комментария, дочерний тоже удаляется (on_delete=models.CASCADE)
+        root_comment_for_delete = Comment.objects.create(
+            post=self.post, author=self.user, content='Удаляемый корень', status='published'
+        )
+        child_comment_for_delete = Comment.objects.create(
+            post=self.post, author=self.user, content='Удаляемый дочерний', status='published',
+            parent=root_comment_for_delete
+        )
+        self.assertTrue(Comment.objects.filter(pk=root_comment_for_delete.pk).exists())
+        self.assertTrue(Comment.objects.filter(pk=child_comment_for_delete.pk).exists())
+
+        root_comment_for_delete.delete()
+
+        self.assertFalse(Comment.objects.filter(pk=root_comment_for_delete.pk).exists())
+        self.assertFalse(Comment.objects.filter(pk=child_comment_for_delete.pk).exists())
