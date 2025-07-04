@@ -400,3 +400,23 @@ class CommentModelTest(TestCase):
         child_comment = self.child_comment
         self.assertEqual(child_comment.parent, self.root_comment)
         self.assertEqual(child_comment.level, 1)
+
+    def test_comment_status_choices(self):
+        """
+        Проверяет, что поле 'status' принимает только допустимые значения.
+        """
+        published_comment = Comment.objects.create(
+            post=self.post, author=self.user, content='Опубликованный', status='published'
+        )
+        self.assertEqual(published_comment.status, 'published')
+
+        draft_comment = Comment.objects.create(
+            post=self.post, author=self.user, content='Черновик', status='draft'
+        )
+        self.assertEqual(draft_comment.status, 'draft')
+
+        with self.assertRaises(ValidationError):
+            invalid_status_comment = Comment(
+                post=self.post, author=self.user, content='Неверный статус', status='invalid_status'
+            )
+            invalid_status_comment.full_clean()
