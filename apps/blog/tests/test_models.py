@@ -3,6 +3,8 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.models import Sum
+from unicodedata import category
+
 from apps.blog.models import Post, Category, Rating
 from apps.services.utils import unique_slugify
 import os
@@ -275,3 +277,32 @@ class PostModelTest(TestCase):
         fixed_posts = Post.custom.fixed_posts()
         self.assertEqual(fixed_posts.count(), 1)
         self.assertEqual(fixed_posts.first(), fixed_post_1)
+
+
+class CategoryModelTest(TestCase):
+    """
+    Набор тестов для модели Category.
+    """
+    @classmethod
+    def setUpTestData(cls):
+        """
+        Метод для настройки данных, которые будут использоваться во всех тестах.
+        """
+        cls.category_data = {
+            'title': 'Тестовая категория',
+            'description': 'Это тестовое описание для категории.'
+        }
+        cls.category = Category.objects.create(**cls.category_data)
+
+    def test_category_creating(self):
+        """
+        Проверяет корректность создания объекта Category и его атрибутов.
+        """
+        category = self.category
+        self.assertTrue(isinstance(category, Category))
+        self.assertEqual(category.title, self.category_data['title'])
+        self.assertEqual(category.description, self.category_data['description'])
+        self.assertIsNotNone(category.slug)
+        self.assertNotEqual(category.slug, '')
+        self.assertEqual(category.slug, 'testovaya-kategoriya')
+        self.assertEqual(str(category), category.title)

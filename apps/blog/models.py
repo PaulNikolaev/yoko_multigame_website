@@ -101,6 +101,16 @@ class Category(models.Model):
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
 
+    def save(self, *args, **kwargs):
+        """
+        При сохранении генерируем слаг для категории.
+        """
+        # Генерируем слаг только если он ещё не установлен.
+        # Это позволяет вручную установить слаг, если это необходимо.
+        if not self.slug:
+            self.slug = unique_slugify(self, self.title)
+        super().save(*args, **kwargs)
+
     def __str__(self):
         """
         Возвращение заголовка категории
