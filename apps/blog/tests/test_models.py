@@ -420,3 +420,10 @@ class CommentModelTest(TestCase):
                 post=self.post, author=self.user, content='Неверный статус', status='invalid_status'
             )
             invalid_status_comment.full_clean()
+
+    def test_comment_str_representation(self):
+        """
+        Проверяет корректность метода __str__.
+        """
+        expected_str = f'{self.root_comment.author}:{self.root_comment.content}'
+        self.assertEqual(str(self.root_comment), expected_str)
