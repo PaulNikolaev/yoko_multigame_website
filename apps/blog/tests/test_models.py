@@ -313,3 +313,18 @@ class CategoryModelTest(TestCase):
         """
         category_without_description = Category.objects.create(title='Категория Без Описания')
         self.assertEqual(category_without_description.description, 'Нет описания')
+
+    def test_slug_generation(self):
+        """
+        Проверяет, что слаг генерируется автоматически при создании категории и является уникальным.
+        """
+        self.assertEqual(self.category.slug, 'testovaya-kategoriya')
+
+        # Тест на уникальность слага
+        category_with_same_title = Category.objects.create(
+            title='Тестовая Категория',
+            description='Другое описание'
+        )
+        self.assertNotEqual(category_with_same_title.slug, 'testovaya-kategoriya')
+        self.assertTrue(category_with_same_title.slug, 'testovaya-kategoriya')
+
