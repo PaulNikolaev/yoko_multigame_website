@@ -306,3 +306,10 @@ class CategoryModelTest(TestCase):
         self.assertNotEqual(category.slug, '')
         self.assertEqual(category.slug, 'testovaya-kategoriya')
         self.assertEqual(str(category), category.title)
+
+    def test_default_description(self):
+        """
+        Проверяет, что описание категории по умолчанию устанавливается в 'Нет описания'.
+        """
+        category_without_description = Category.objects.create(title='Категория Без Описания')
+        self.assertEqual(category_without_description.description, 'Нет описания')
