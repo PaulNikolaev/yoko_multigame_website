@@ -3,6 +3,7 @@ import time
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.db.utils import IntegrityError
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from apps.blog.models import Post, Category, Comment, Rating
@@ -577,3 +578,52 @@ class RatingModelTest(TestCase):
             invalid_rating = Rating(post=self.post, user=self.user2, value=2)
             invalid_rating.full_clean()
 
+    def test_unique_together_constraint(self):
+        """
+        Проверяет, что комбинация 'post' и 'user' является уникальной.
+        """
+        with self.assertRaises(IntegrityError):
+            Rating.objects.create(
+                post=self.post,
+                user=self.user1,
+                value=-1
+            )
+
+    def test_unique_together_allows_other_ratings(self):
+        """
+        Проверяет, что уникальное ограничение позволяет создать рейтинг
+        для другого поста или другим пользователем.
+        """
+        # Создаем новый пост для проверки
+        new_post_for_rating = Post.objects.create(
+            title='Другой пост для рейтинга',
+            description='desc',
+            text='text',
+            author=self.user1,
+            category=self.category,
+            status='published'
+        )
+
+        # user1 уже оценил self.post, но может оценить new_post_for_rating
+        rating_by_user1_on_new_post = Rating.objects.create(
+            post=new_post_for_rating,
+            user=self.user1,
+            value=1
+        )
+        self.assertIsNotNone(rating_by_user1_on_new_post.pk)
+
+        # user2 уже оценил self.post, но может оценить new_post_for_rating
+        rating_by_user2_on_new_post = Rating.objects.create(
+            post=new_post_for_rating,
+            user=self.user2,
+            value=-1
+        )
+        self.assertIsNotNone(rating_by_user2_on_new_post.pk)
+
+        # user_no_ratings еще не оценил self.post, поэтому может
+        new_rating_by_user_no_ratings = Rating.objects.create(
+            post=self.post,
+            user=self.user_no_ratings,
+            value=1
+        )
+        self.assertIsNotNone(new_rating_by_user_no_ratings.pk)
