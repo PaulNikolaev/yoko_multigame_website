@@ -7,7 +7,6 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 
 from apps.blog.models import Post, Category, Comment, Rating
 
-
 User = get_user_model()
 
 
@@ -513,3 +512,55 @@ class CommentModelTest(TestCase):
         self.assertEqual(all_comments[2], comment_oldest)
         self.assertEqual(all_comments[3], self.child_comment)
         self.assertEqual(all_comments[4], self.root_comment)
+
+
+class RatingModelTest(TestCase):
+    """
+    Набор тестов для модели Rating.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        """
+        Метод для настройки данных, которые будут использоваться во всех тестах.
+        """
+        cls.user1 = User.objects.create_user(username='rater_user1', password='password1')
+        cls.user2 = User.objects.create_user(username='rater_user2', password='password2')
+        cls.user_no_ratings = User.objects.create_user(username='no_ratings_user', password='password3')
+        cls.category = Category.objects.create(title='Тестовая Категория Рейтингов')
+        cls.post = Post.objects.create(
+            title='Тестовый Пост Для Рейтинга',
+            description='Описание.',
+            text='Текст поста.',
+            author=cls.user1,  # Используем user1 как автора поста
+            category=cls.category,
+            status='published'
+        )
+
+        # Создаем начальные рейтинги
+        cls.like_rating = Rating.objects.create(
+            post=cls.post,
+            user=cls.user1,
+            value=1
+        )
+        time.sleep(0.01)  # Убедимся, что время добавления отличается
+        cls.dislike_rating = Rating.objects.create(
+            post=cls.post,
+            user=cls.user2,
+            value=-1
+        )
+
+    def test_rating_creation(self):
+        """
+        Проверяет корректность создания объекта Rating и его атрибутов.
+        """
+        rating = self.like_rating
+        self.assertTrue(isinstance(rating, Rating))
+        self.assertEqual(rating.post, self.post)
+        self.assertEqual(rating.user, self.user1)
+        self.assertEqual(rating.value, 1)
+        self.assertIsNotNone(rating.time_create)
+        self.assertEqual(str(rating), f"Рейтинг для {self.post.title} от {self.user1.username}")
+
+        dislike_rating = self.dislike_rating
+        self.assertEqual(dislike_rating.value, -1)
