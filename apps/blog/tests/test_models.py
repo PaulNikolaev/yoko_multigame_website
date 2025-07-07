@@ -520,34 +520,33 @@ class RatingModelTest(TestCase):
     Набор тестов для модели Rating.
     """
 
-    @classmethod
-    def setUpTestData(cls):
+    def setUp(self):
         """
-        Метод для настройки данных, которые будут использоваться во всех тестах.
+        Метод для настройки данных перед каждым тестом.
         """
-        cls.user1 = User.objects.create_user(username='rater_user1', password='password1')
-        cls.user2 = User.objects.create_user(username='rater_user2', password='password2')
-        cls.user_no_ratings = User.objects.create_user(username='no_ratings_user', password='password3')
-        cls.category = Category.objects.create(title='Тестовая Категория Рейтингов')
-        cls.post = Post.objects.create(
+        self.user1 = User.objects.create_user(username='rater_user1', password='password1')
+        self.user2 = User.objects.create_user(username='rater_user2', password='password2')
+        self.user_no_ratings = User.objects.create_user(username='no_ratings_user', password='password3')
+        self.category = Category.objects.create(title='Тестовая Категория Рейтингов')
+        self.post = Post.objects.create(
             title='Тестовый Пост Для Рейтинга',
             description='Описание.',
             text='Текст поста.',
-            author=cls.user1,  # Используем user1 как автора поста
-            category=cls.category,
+            author=self.user1,
+            category=self.category,
             status='published'
         )
 
         # Создаем начальные рейтинги
-        cls.like_rating = Rating.objects.create(
-            post=cls.post,
-            user=cls.user1,
+        self.like_rating = Rating.objects.create(
+            post=self.post,
+            user=self.user1,
             value=1
         )
-        time.sleep(0.01)  # Убедимся, что время добавления отличается
-        cls.dislike_rating = Rating.objects.create(
-            post=cls.post,
-            user=cls.user2,
+        time.sleep(0.01)
+        self.dislike_rating = Rating.objects.create(
+            post=self.post,
+            user=self.user2,
             value=-1
         )
 
@@ -571,16 +570,21 @@ class RatingModelTest(TestCase):
         Проверяет, что поле 'value' принимает только допустимые значения.
         """
         with self.assertRaises(ValidationError):
-            invalid_rating = Rating(post=self.post, user=self.user1, value=0)
+            invalid_rating = Rating(
+                post=self.post, user=self.user1, value=0
+            )
             invalid_rating.full_clean()
 
         with self.assertRaises(ValidationError):
-            invalid_rating = Rating(post=self.post, user=self.user2, value=2)
+            invalid_rating = Rating(
+                post=self.post, user=self.user1, value=2
+            )
             invalid_rating.full_clean()
 
-    def test_unique_together_constraint(self):
+    def test_unique_together_constraint_raises_error(self):
         """
-        Проверяет, что комбинация 'post' и 'user' является уникальной.
+        Проверяет, что комбинация 'post' и 'user' является уникальной и
+        повторная попытка создания вызывает IntegrityError.
         """
         with self.assertRaises(IntegrityError):
             Rating.objects.create(
@@ -594,7 +598,6 @@ class RatingModelTest(TestCase):
         Проверяет, что уникальное ограничение позволяет создать рейтинг
         для другого поста или другим пользователем.
         """
-        # Создаем новый пост для проверки
         new_post_for_rating = Post.objects.create(
             title='Другой пост для рейтинга',
             description='desc',
@@ -604,7 +607,6 @@ class RatingModelTest(TestCase):
             status='published'
         )
 
-        # user1 уже оценил self.post, но может оценить new_post_for_rating
         rating_by_user1_on_new_post = Rating.objects.create(
             post=new_post_for_rating,
             user=self.user1,
@@ -612,7 +614,6 @@ class RatingModelTest(TestCase):
         )
         self.assertIsNotNone(rating_by_user1_on_new_post.pk)
 
-        # user2 уже оценил self.post, но может оценить new_post_for_rating
         rating_by_user2_on_new_post = Rating.objects.create(
             post=new_post_for_rating,
             user=self.user2,
@@ -620,7 +621,6 @@ class RatingModelTest(TestCase):
         )
         self.assertIsNotNone(rating_by_user2_on_new_post.pk)
 
-        # user_no_ratings еще не оценил self.post, поэтому может
         new_rating_by_user_no_ratings = Rating.objects.create(
             post=self.post,
             user=self.user_no_ratings,
@@ -639,8 +639,10 @@ class RatingModelTest(TestCase):
         )
         self.assertTrue(Rating.objects.filter(pk=rating_to_delete.pk).exists())
 
+        # Удаляем пост
         self.post.delete()
 
+        # Проверяем, что рейтинг был удален
         self.assertFalse(Rating.objects.filter(pk=rating_to_delete.pk).exists())
         self.assertFalse(Rating.objects.filter(pk=self.like_rating.pk).exists())
         self.assertFalse(Rating.objects.filter(pk=self.dislike_rating.pk).exists())
@@ -666,3 +668,35 @@ class RatingModelTest(TestCase):
         self.assertTrue(Rating.objects.filter(pk=self.like_rating.pk).exists())
         self.assertTrue(Rating.objects.filter(pk=self.dislike_rating.pk).exists())
 
+    def test_ordering_by_time_create(self):
+        """
+        Проверяет сортировку рейтингов по -time_create (от нового к старому).
+        """
+        temp_post_for_ordering = Post.objects.create(
+            title='Временный пост для теста сортировки рейтингов',
+            description='desc',
+            text='text',
+            author=self.user1,
+            category=self.category,
+            status='published'
+        )
+
+        time.sleep(0.05)
+        rating_for_sort_oldest = Rating.objects.create(
+            post=temp_post_for_ordering, user=self.user1, value=1
+        )
+        time.sleep(0.05)
+        rating_for_sort_middle = Rating.objects.create(
+            post=temp_post_for_ordering, user=self.user2, value=-1
+        )
+        time.sleep(0.05)
+        rating_for_sort_newest = Rating.objects.create(
+            post=temp_post_for_ordering, user=self.user_no_ratings, value=1
+        )
+
+        all_ratings = Rating.objects.filter(post=temp_post_for_ordering).order_by('-time_create')
+
+        self.assertEqual(len(all_ratings), 3)
+        self.assertEqual(all_ratings[0], rating_for_sort_newest)
+        self.assertEqual(all_ratings[1], rating_for_sort_middle)
+        self.assertEqual(all_ratings[2], rating_for_sort_oldest)
