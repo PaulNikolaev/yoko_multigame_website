@@ -627,3 +627,20 @@ class RatingModelTest(TestCase):
             value=1
         )
         self.assertIsNotNone(new_rating_by_user_no_ratings.pk)
+
+    def test_on_delete_cascade_post(self):
+        """
+        Проверяет, что рейтинг удаляется при удалении связанного поста.
+        """
+        rating_to_delete = Rating.objects.create(
+            post=self.post,
+            user=self.user_no_ratings,
+            value=1
+        )
+        self.assertTrue(Rating.objects.filter(pk=rating_to_delete.pk).exists())
+
+        self.post.delete()
+
+        self.assertFalse(Rating.objects.filter(pk=rating_to_delete.pk).exists())
+        self.assertFalse(Rating.objects.filter(pk=self.like_rating.pk).exists())
+        self.assertFalse(Rating.objects.filter(pk=self.dislike_rating.pk).exists())
