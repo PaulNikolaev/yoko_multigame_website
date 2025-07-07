@@ -644,3 +644,25 @@ class RatingModelTest(TestCase):
         self.assertFalse(Rating.objects.filter(pk=rating_to_delete.pk).exists())
         self.assertFalse(Rating.objects.filter(pk=self.like_rating.pk).exists())
         self.assertFalse(Rating.objects.filter(pk=self.dislike_rating.pk).exists())
+
+    def test_on_delete_cascade_user(self):
+        """
+        Проверяет, что рейтинг удаляется при удалении связанного пользователя.
+        """
+        rating_by_user_to_delete = Rating.objects.create(
+            post=self.post,
+            user=self.user_no_ratings,
+            value=1
+        )
+        self.assertTrue(Rating.objects.filter(pk=rating_by_user_to_delete.pk).exists())
+
+        # Удаляем пользователя
+        self.user_no_ratings.delete()
+
+        # Проверяем, что рейтинг был удален
+        self.assertFalse(Rating.objects.filter(pk=rating_by_user_to_delete.pk).exists())
+
+        # Убедимся, что рейтинги других пользователей остались
+        self.assertTrue(Rating.objects.filter(pk=self.like_rating.pk).exists())
+        self.assertTrue(Rating.objects.filter(pk=self.dislike_rating.pk).exists())
+
