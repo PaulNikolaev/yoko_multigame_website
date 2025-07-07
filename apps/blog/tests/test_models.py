@@ -564,3 +564,16 @@ class RatingModelTest(TestCase):
 
         dislike_rating = self.dislike_rating
         self.assertEqual(dislike_rating.value, -1)
+
+    def test_value_choices(self):
+        """
+        Проверяет, что поле 'value' принимает только допустимые значения.
+        """
+        with self.assertRaises(ValidationError):
+            invalid_rating = Rating(post=self.post, user=self.user1, value=0)
+            invalid_rating.full_clean()
+
+        with self.assertRaises(ValidationError):
+            invalid_rating = Rating(post=self.post, user=self.user2, value=2)
+            invalid_rating.full_clean()
+
