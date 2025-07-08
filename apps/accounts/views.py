@@ -2,7 +2,7 @@ from django.views.generic import DetailView, UpdateView, CreateView, View
 from django.db import transaction
 from django.urls import reverse_lazy
 from django.contrib.messages.views import SuccessMessageMixin
-from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView
 from django.http import JsonResponse
 from .models import Profile
 from .forms import UserUpdateForm, ProfileUpdateForm, UserRegisterForm, UserLoginForm
@@ -60,6 +60,12 @@ class ProfileUpdateView(UpdateView):
 
     def get_success_url(self):
         return reverse_lazy('accounts:profile_detail', kwargs={'slug': self.object.slug})
+
+
+class ChangePasswordView(SuccessMessageMixin, PasswordChangeView):
+    template_name = 'accounts/change_password.html'
+    success_message = 'Вы успешно изменили пароль!'
+    success_url = reverse_lazy('accounts:login')
 
 
 class UserRegisterView(SuccessMessageMixin, CreateView):
