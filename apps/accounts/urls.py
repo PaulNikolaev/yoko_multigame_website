@@ -5,17 +5,17 @@ from .views import (ProfileUpdateView,
                     UserRegisterView,
                     UserLoginView,
                     UserLogoutView,
-                    ChangePasswordView,
+                    CustomChangePasswordView,
                     CityAutocompleteAjaxView)
 
 app_name = 'accounts'
 
 urlpatterns = [
-    path('user/edit/', ProfileUpdateView.as_view(), name='profile_edit'),
     path('user/<slug:slug>/', ProfileDetailView.as_view(), name='profile_detail'),
+    path('user/<slug:slug>/edit/', ProfileUpdateView.as_view(), name='profile_edit'),
+    path('user/<slug:slug>/password_change/', CustomChangePasswordView.as_view(), name='password_change'),
     path('register/', UserRegisterView.as_view(), name='register'),
     path('login/', UserLoginView.as_view(), name='login'),
     path('logout/', UserLogoutView.as_view(), name='logout'),
-    path('password_change/', ChangePasswordView.as_view(), name='password_change'),
     path('city-autocomplete/', CityAutocompleteAjaxView.as_view(), name='city_autocomplete_ajax'),
 ]

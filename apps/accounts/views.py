@@ -3,6 +3,7 @@ from django.db import transaction
 from django.urls import reverse_lazy
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from .models import Profile
 from .forms import UserUpdateForm, ProfileUpdateForm, UserRegisterForm, UserLoginForm
@@ -38,6 +39,7 @@ class ProfileUpdateView(UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = f'Редактирование профиля пользователя: {self.request.user.username}'
+        context['slug'] = self.object.slug
         if self.request.POST:
             context['user_form'] = UserUpdateForm(self.request.POST, instance=self.request.user)
             context['form'] = self.form_class(self.request.POST, instance=self.get_object())
@@ -49,23 +51,17 @@ class ProfileUpdateView(UpdateView):
     def form_valid(self, form):
         context = self.get_context_data()
         user_form = context['user_form']
-
-        if all([form.is_valid(), user_form.is_valid()]):
-            with transaction.atomic():
+        with transaction.atomic():
+            if all([form.is_valid(), user_form.is_valid()]):
                 user_form.save()
                 form.save()
-            return super().form_valid(form)
-        else:
-            return self.render_to_response(context)
+            else:
+                context.update({'user_form': user_form})
+                return self.render_to_response(context)
+        return super().form_valid(form)
 
     def get_success_url(self):
         return reverse_lazy('accounts:profile_detail', kwargs={'slug': self.object.slug})
-
-
-class ChangePasswordView(SuccessMessageMixin, PasswordChangeView):
-    template_name = 'accounts/change_password.html'
-    success_message = 'Вы успешно изменили пароль!'
-    success_url = reverse_lazy('accounts:login')
 
 
 class UserRegisterView(SuccessMessageMixin, CreateView):
@@ -82,6 +78,10 @@ class UserRegisterView(SuccessMessageMixin, CreateView):
         context['title'] = 'Регистрация на сайте'
         return context
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        return response
+
 
 class UserLoginView(SuccessMessageMixin, LoginView):
     """
@@ -97,6 +97,10 @@ class UserLoginView(SuccessMessageMixin, LoginView):
         context['title'] = 'Авторизация на сайте'
         return context
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        return response
+
 
 class UserLogoutView(LogoutView):
     """
@@ -104,6 +108,22 @@ class UserLogoutView(LogoutView):
     """
     next_page = 'blog:home'
 
+
+class CustomChangePasswordView(LoginRequiredMixin, PasswordChangeView):
+    template_name = 'accounts/change_password.html'
+    success_message = 'Вы успешно изменили пароль!'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['slug'] = self.request.user.profile.slug
+        return context
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        return response
+
+    def get_success_url(self):
+        return reverse_lazy('accounts:profile_detail', kwargs={'slug': self.request.user.profile.slug})
 
 class CityAutocompleteAjaxView(View):
     def get(self, request, *args, **kwargs):

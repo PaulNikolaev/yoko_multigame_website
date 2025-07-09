@@ -24,7 +24,7 @@
                         <li>О себе: {{ profile.bio }}</li>
                     </ul>
                     {% if request.user == profile.user %}
-                    <a href="{% url 'accounts:profile_edit' %}" class="btn btn-sm btn-primary">
+                    <a href="{% url 'accounts:profile_edit' slug=profile.slug %}" class="btn btn-sm btn-primary">
                         Редактировать профиль
                     </a>
                     {% endif %}
