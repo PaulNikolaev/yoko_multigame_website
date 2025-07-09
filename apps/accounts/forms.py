@@ -5,6 +5,8 @@ from django.urls import reverse_lazy
 from .models import Profile
 from django_countries.widgets import CountrySelectWidget
 from django_select2.forms import Select2Widget
+from datetime import timedelta
+from django.utils import timezone
 
 
 class UserUpdateForm(forms.ModelForm):
@@ -67,6 +69,24 @@ class ProfileUpdateForm(forms.ModelForm):
             'country': 'Страна',
             'city': 'Город',
         }
+
+    def clean_birth_date(self):
+        """
+        Валидация даты рождения (не должно быть будущих дат и возраст не более 90 лет)
+        """
+        birth_date = self.cleaned_data.get('birth_date')
+
+        if birth_date:
+            today = timezone.now().date()
+
+            if birth_date > today:
+                raise forms.ValidationError('Дата рождения не может быть в будущем.')
+
+            check_date_for_90_years_ago = birth_date.replace(year=birth_date.year + 90)
+            if check_date_for_90_years_ago < today:
+                raise forms.ValidationError('Возраст не может превышать 90 лет.')
+
+        return birth_date
 
 
 class UserRegisterForm(UserCreationForm):
