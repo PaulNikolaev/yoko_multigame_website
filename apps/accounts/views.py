@@ -2,11 +2,12 @@ from django.views.generic import DetailView, UpdateView, CreateView, View
 from django.db import transaction
 from django.urls import reverse_lazy
 from django.contrib.messages.views import SuccessMessageMixin
-from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView
+from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView, PasswordResetView, \
+    PasswordResetConfirmView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from .models import Profile
-from .forms import UserUpdateForm, ProfileUpdateForm, UserRegisterForm, UserLoginForm
+from .forms import UserUpdateForm, ProfileUpdateForm, UserRegisterForm, UserLoginForm, CustomPasswordResetForm
 from cities_light.models import City, Country
 from django.db.models import Q
 
@@ -124,6 +125,49 @@ class CustomChangePasswordView(LoginRequiredMixin, PasswordChangeView):
 
     def get_success_url(self):
         return reverse_lazy('accounts:profile_detail', kwargs={'slug': self.request.user.profile.slug})
+
+
+class CustomPasswordResetView(SuccessMessageMixin, PasswordResetView):
+    """
+    Восстановление пароля с проверкой email.
+    """
+    form_class = CustomPasswordResetForm
+    template_name = 'accounts/password_reset.html'
+    email_template_name = 'accounts/password_reset_email.html'
+    subject_template_name = 'accounts/password_reset_subject.txt'
+    success_url = '/accounts/password-reset/done/'
+    success_message = 'Инструкции по восстановлению пароля отправлены на ваш email.'
+
+    def get_context_data(self, **kwargs):
+        """
+        Добавляем данные в контекст.
+        """
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Восстановление пароля'
+        return context
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        return response
+
+
+class CustomPasswordResetConfirmView(SuccessMessageMixin, PasswordResetConfirmView):
+    """
+    Подтверждение сброса пароля
+    """
+    template_name = 'accounts/password_reset_confirm.html'
+    success_url = '/accounts/reset/done/'
+    success_message = 'Ваш пароль успешно изменен.'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Установка нового пароля'
+        return context
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        return response
+
 
 class CityAutocompleteAjaxView(View):
     def get(self, request, *args, **kwargs):

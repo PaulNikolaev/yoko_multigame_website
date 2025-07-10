@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordResetForm
 from django.contrib.auth.models import User
 from django.urls import reverse_lazy
 from .models import Profile
@@ -139,3 +139,16 @@ class UserLoginForm(AuthenticationForm):
                 'class': 'form-control',
                 'autocomplete': 'off'
             })
+
+
+class CustomPasswordResetForm(PasswordResetForm):
+    """
+    Кастомная форма сброса пароля с проверкой наличия email в базе данных.
+    """
+    email = forms.EmailField(label="Email", max_length=254, widget=forms.EmailInput(attrs={'autocomplete': 'email'}))
+
+    def clean_email(self):
+        email = self.cleaned_data['email']
+        if not User.objects.filter(email=email).exists():
+            raise forms.ValidationError("Пользователь с таким email не найден.")
+        return email
