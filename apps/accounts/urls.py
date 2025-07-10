@@ -26,9 +26,9 @@ urlpatterns = [
 
     #   Восстановление пароля
     path('password-reset/', CustomPasswordResetView.as_view(), name='password_reset'),
-    path('password-reset/done/', TemplateView.as_view(template_name='accounts/password_reset_done.html'),
+    path('password-reset/done/', TemplateView.as_view(template_name='accounts/password_reset/password_reset_done.html'),
          name='password_reset_done'),
     path('reset/<uidb64>/<token>/', CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
-    path('reset/done/', PasswordResetCompleteView.as_view(template_name='accounts/password_reset_complete.html'),
+    path('reset/done/', PasswordResetCompleteView.as_view(template_name='accounts/password_reset/password_reset_complete.html'),
          name='password_reset_complete'),
 ]

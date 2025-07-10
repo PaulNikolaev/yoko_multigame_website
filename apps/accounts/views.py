@@ -132,10 +132,10 @@ class CustomPasswordResetView(SuccessMessageMixin, PasswordResetView):
     Восстановление пароля с проверкой email.
     """
     form_class = CustomPasswordResetForm
-    template_name = 'accounts/password_reset.html'
-    email_template_name = 'accounts/password_reset_email.html'
-    subject_template_name = 'accounts/password_reset_subject.txt'
-    success_url = '/accounts/password-reset/done/'
+    template_name = 'accounts/password_reset/password_reset.html'
+    email_template_name = 'accounts/password_reset/password_reset_email.html'
+    subject_template_name = 'accounts/password_reset/password_reset_subject.txt'
+    success_url = reverse_lazy('accounts:password_reset_done')
     success_message = 'Инструкции по восстановлению пароля отправлены на ваш email.'
 
     def get_context_data(self, **kwargs):
@@ -155,8 +155,8 @@ class CustomPasswordResetConfirmView(SuccessMessageMixin, PasswordResetConfirmVi
     """
     Подтверждение сброса пароля
     """
-    template_name = 'accounts/password_reset_confirm.html'
-    success_url = '/accounts/reset/done/'
+    template_name = 'accounts/password_reset/password_reset_confirm.html'
+    success_url = reverse_lazy('accounts:password_reset_complete')
     success_message = 'Ваш пароль успешно изменен.'
 
     def get_context_data(self, **kwargs):
