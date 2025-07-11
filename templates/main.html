@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <title>{{ title }}</title>
 
-    {# Добавляем мета-тег для CSRF-токена. Это очень важно для всех AJAX POST запросов. #}
+    {# Добавляем мета-тег для CSRF-токена #}
     <meta name="csrfmiddlewaretoken" content="{{ csrf_token }}">
 
     {# Подключаем Bootstrap CSS #}
@@ -21,8 +21,6 @@
     {% block extra_head %}
     {% endblock %}
 </head>
-{# Добавляем атрибут data-user-authenticated к тегу body. #}
-{# Это позволит JavaScript узнать, аутентифицирован ли пользователь. #}
 <body class="d-flex flex-column min-vh-100" data-user-authenticated="{{ request.user.is_authenticated|yesno:'true,false' }}">
 {% include 'includes/header.html' %}
 <div class="container">
@@ -40,11 +38,15 @@
 </div>
 {% include 'includes/footer.html' %}
 
-{# Подключаем jQuery первым, так как другие скрипты от него зависят #}
+{# Подключаем jQuery #}
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
 {# Подключаем Bootstrap JS #}
 {% bootstrap_javascript %}
+
+<script>
+    const csrftoken = document.querySelector('meta[name="csrfmiddlewaretoken"]').getAttribute('content');
+</script>
 
 {# Подключаем Flatpickr JavaScript и его локализацию #}
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -54,11 +56,9 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/ru.js"></script>
 
-{# Подключаем ваш backend.js (или любые другие общие скрипты) #}
+{# Подключаем ваш backend.js #}
 <script src="{% static 'js/backend.js' %}"></script>
 
-{# Изменено на extra_js для лучшей семантики #}
-{# Здесь будут подключаться специфичные для страницы скрипты, такие как ratings.js или profile_scripts.js #}
 {% block extra_js %}{% endblock %}
 </body>
 </html>

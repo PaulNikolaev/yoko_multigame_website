@@ -1,29 +1,57 @@
+{% load static %}
+{% load thumbnail %}
+
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
         <a class="navbar-brand" href="/">YOKO Multigame</a>
-        </div>
-</nav>
-<div class='d-flex justify-content-end '>
-            {% if request.user.is_authenticated %}
-        <div class="dropdown text-end">
-          <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-            {{ request.user }}
-          </a>
-          <ul class="dropdown-menu text-small">
-            <li><a class="dropdown-item" href="{% url 'blog:post_create' %}">Добавить статью</a></li>
-            <li><a class="dropdown-item" href="{% url 'accounts:profile_detail' request.user.profile.slug %}">Мой профиль</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li>
-                    <form action="{% url 'accounts:logout' %}" method="post">{% csrf_token %}
-                        <a href="#" class="dropdown-item" onclick="parentNode.submit();">Выход</a>
-                    </form>
-            </li>
-          </ul>
-        </div>
-        {% else %}
-            <ul class="nav ">
-              <li><a href="{% url 'accounts:register' %}" class="nav-link px-2 link-secondary">Регистрация</a></li>
-              <li><a href="{% url 'accounts:login' %}" class="nav-link px-2 link-dark">Вход</a></li>
+
+        {# Кнопка-гамбургер для мобильных устройств #}
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        {# Блок с навигацией и пользовательскими элементами #}
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <ul class="navbar-nav">
+                {% if request.user.is_authenticated %}
+                    {# Элементы для авторизованного пользователя #}
+                    <li class="nav-item dropdown">
+                        <a href="#" class="nav-link dropdown-toggle d-flex align-items-center" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            {% if request.user.profile.avatar %}
+                                <img src="{% thumbnail request.user.profile.avatar "30x30" crop="center" quality=80 %}"
+                                     alt="Аватар {{ request.user.username }}"
+                                     class="rounded-circle me-2" 
+                                     style="width: 30px; height: 30px; object-fit: cover;">
+                            {% else %}
+                                <img src="{% static 'images/avatars/default.png' %}"
+                                     alt="Дефолтный аватар"
+                                     class="rounded-circle me-2"
+                                     style="width: 30px; height: 30px; object-fit: cover;">
+                            {% endif %}
+                            {{ request.user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="{% url 'blog:post_create' %}">Добавить статью</a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:profile_detail' request.user.profile.slug %}">Мой профиль</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form action="{% url 'accounts:logout' %}" method="post">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item">Выход</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                {% else %}
+                    {# Элементы для неавторизованного пользователя #}
+                    <li class="nav-item">
+                        <a href="{% url 'accounts:register' %}" class="nav-link">Регистрация</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'accounts:login' %}" class="nav-link">Вход</a>
+                    </li>
+                {% endif %}
             </ul>
-        {% endif %}
-</div>
+        </div>
+    </div>
+</nav>

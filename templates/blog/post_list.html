@@ -1,44 +1,55 @@
 {% extends 'main.html' %}
 {% load static %}
 {% load rating_tags %}
+{% load thumbnail %}
 
 {% block content %}
     {% for post in posts %}
         <div class="card mb-3">
-            <div class="row">
-                <div class="col-4">
+            <div class="row g-0"> 
+                <div class="col-md-4"> 
                     {% if post.thumbnail %}
-                        <img src="{{ post.thumbnail.url }}" class="card-img-top" alt="{{ post.title }}">
+                        <img src="{% thumbnail post.thumbnail "400x250" crop="center" quality=85 %}"
+                             class="img-fluid rounded-start"
+                             alt="{{ post.title }}">
                     {% else %}
-                        <div class="d-flex align-items-center justify-content-center h-100">
-                            <p>Нет изображения</p>
-                        </div>
+                        <img src="{% static 'images/thumbnails/default.jpg' %}"
+                             class="img-fluid rounded-start"
+                             alt="Изображение не найдено">
                     {% endif %}
                 </div>
-                <div class="col-8">
+                <div class="col-md-8">
                     <div class="card-body">
                         <h5 class="card-title">
                             <a href="{% url 'blog:post_detail' post.slug %}">{{ post.title }}</a>
                         </h5>
                         <p class="card-text">{{ post.description }}</p>
-                        <small>Добавил {{ post.author.username }}, {{ post.create }}</small>
-                        в категорию: <a
-                            href="{% url 'blog:post_by_category' post.category.slug %}">{{ post.category.title }}</a>
+                        <p class="card-text">
+                            <small class="text-muted">
+                                Добавил <a href="{% url 'accounts:profile_detail' post.author.profile.slug %}">{{ post.author.username }}</a>, {{ post.create|date:"d.m.Y H:i" }} {# Форматируем дату и время #}
+                            </small>
+                            <br>
+                            <small class="text-muted">
+                                В категорию: <a href="{% url 'blog:post_by_category' post.category.slug %}">{{ post.category.title }}</a>
+                            </small>
+                        </p>
                     </div>
                 </div>
             </div>
-            <div class="rating-buttons" data-post-id="{{ post.id }}">
-                {% get_user_rating_value post request.user as current_vote %}
+            <div class="card-footer d-flex justify-content-start align-items-center"> 
+                <div class="rating-buttons" data-post-id="{{ post.id }}">
+                    {% get_user_rating_value post request.user as current_vote %}
 
-                <button class="btn btn-sm btn-outline-success like-button" data-value="1"
-                        data-current-vote="{{ current_vote }}">
-                    👍
-                </button>
-                <button class="btn btn-sm btn-outline-danger dislike-button" data-value="-1"
-                        data-current-vote="{{ current_vote }}">
-                    👎
-                </button>
-                <span class="rating-sum badge bg-secondary ms-2">{{ post.get_sum_rating }}</span>
+                    <button class="btn btn-sm {% if current_vote == 1 %}btn-success{% else %}btn-outline-success{% endif %} like-button" data-value="1"
+                            data-current-vote="{{ current_vote }}">
+                        👍
+                    </button>
+                    <button class="btn btn-sm {% if current_vote == -1 %}btn-danger{% else %}btn-outline-danger{% endif %} dislike-button" data-value="-1"
+                            data-current-vote="{{ current_vote }}">
+                        👎
+                    </button>
+                    <span class="rating-sum badge bg-secondary ms-2">{{ post.get_sum_rating }}</span>
+                </div>
             </div>
         </div>
     {% endfor %}

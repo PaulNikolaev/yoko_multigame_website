@@ -1,5 +1,6 @@
 {% extends 'main.html' %}
 {% load static %}
+{% load thumbnail %}
 
 {% block content %}
     <div class="card mb-3 border-0 nth-shadow">
@@ -36,9 +37,21 @@
                         {{ form.avatar.label_tag }}
                         {{ form.avatar }}
                         {% if form.instance.avatar %}
-                            <small class="form-text text-muted">Текущий аватар: <img
-                                    src="{{ form.instance.avatar.url }}" alt="Текущий аватар" class="img-thumbnail"
-                                    style="width: 50px; height: 50px; object-fit: cover;"></small>
+                            <small class="form-text text-muted d-block mt-2">
+                                Текущий аватар:
+                                <img src="{% thumbnail form.instance.avatar "50x50" crop="center" quality=80 %}"
+                                     alt="Текущий аватар"
+                                     class="img-thumbnail rounded-circle"
+                                     style="object-fit: cover;"> 
+                            </small>
+                        {% else %}
+                            <small class="form-text text-muted d-block mt-2">
+                                Текущий аватар:
+                                <img src="{% static 'images/avatars/default.png' %}"
+                                     alt="Дефолтный аватар"
+                                     class="img-thumbnail rounded-circle"
+                                     style="width: 50px; height: 50px; object-fit: cover;">
+                            </small>
                         {% endif %}
                         {% for error in form.avatar.errors %}
                             <div class="text-danger">{{ error }}</div>
@@ -106,7 +119,7 @@
                 <div class="d-grid gap-2 d-md-block mt-4">
                     <button type="submit" class="btn btn-dark">Подтвердить изменение профиля</button>
                     <a href="{% url 'accounts:password_change' slug=form.instance.slug %}" class="btn btn-primary">Изменить пароль</a>
-                    <a href="{% url 'accounts:profile_edit' slug=form.instance.slug %}" class="btn btn-outline-secondary">Отмена</a>
+                    <a href="{% url 'accounts:profile_detail' slug=form.instance.slug %}" class="btn btn-outline-secondary">Отмена</a>
                 </div>
             </form>
         </div>

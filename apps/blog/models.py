@@ -48,7 +48,6 @@ class Post(models.Model):
         related_name='posts'
     )
     thumbnail = models.ImageField(
-        default='images/thumbnails/default.jpg',
         verbose_name='Изображение записи',
         blank=True,
         upload_to='images/thumbnails/%Y/%m/%d/',

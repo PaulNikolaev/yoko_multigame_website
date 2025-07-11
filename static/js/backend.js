@@ -13,5 +13,3 @@ const getCookie = (name) => {
     }
     return cookieValue;
 };
-
-const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').content;

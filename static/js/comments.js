@@ -1,85 +1,151 @@
-const commentForm = document.forms.commentForm;
-const commentFormContent = commentForm.content;
-const commentFormParentInput = commentForm.parent;
-const commentFormSubmit = commentForm.commentSubmit;
-const commentPostId = commentForm.getAttribute('data-post-id');
+document.addEventListener('DOMContentLoaded', function () {
+    const commentForm = document.forms.commentForm;
+    const commentFormContent = commentForm.content;
+    const commentFormParentInput = commentForm.parent;
+    const commentFormSubmit = commentForm.commentSubmit;
+    const commentPostId = commentForm.getAttribute('data-post-id');
 
-commentForm.addEventListener('submit', createComment);
+    const replyToInfo = document.getElementById('reply-to-info');
+    const replyUsernameSpan = document.getElementById('reply-username');
+    const cancelReplyBtn = document.getElementById('cancel-reply-btn');
 
-replyUser()
+    // --- Функции-обработчики событий ---
 
-function replyUser() {
-    document.querySelectorAll('.btn-reply').forEach(e => {
-        e.addEventListener('click', replyComment);
-    });
-}
-
-function replyComment() {
-    const commentUsername = this.getAttribute('data-comment-username');
-    const commentMessageId = this.getAttribute('data-comment-id');
-    commentFormContent.value = `${commentUsername}, `;
-    commentFormContent.focus();
-    commentFormParentInput.value = commentMessageId;
-}
-
-async function createComment(event) {
-    event.preventDefault();
-    commentFormSubmit.disabled = true;
-    commentFormSubmit.innerText = "Ожидаем ответа сервера";
-    try {
-        const response = await fetch(`/post/${commentPostId}/comments/create/`, {
-            method: 'POST',
-            headers: {
-                // Здесь csrftoken теперь будет браться из глобальной области видимости,
-                // куда его поместит backend.js
-                'X-CSRFToken': csrftoken,
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            body: new FormData(commentForm),
+    // Функция для инициализации всех слушателей событий на комментариях
+    function initializeCommentEventListeners() {
+        // Инициализация кнопок "Ответить"
+        document.querySelectorAll('.btn-reply').forEach(button => {
+            button.removeEventListener('click', replyComment);
+            button.addEventListener('click', replyComment);
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `Server error: ${response.status}`);
-        }
-
-        const comment = await response.json();
-
-        let commentTemplate = `<ul id="comment-thread-${comment.id}">
-                                <li class="card border-0">
-                                    <div class="row">
-                                        <div class="col-md-2">
-                                            <img src="${comment.avatar}" style="width: 100px;height: 100px;object-fit: cover;" alt="${comment.author}"/>
-                                        </div>
-                                        <div class="col-md-10">
-                                            <div class="card-body">
-                                                <h6 class="card-title">
-                                                    <a href="${comment.profile_url}">${comment.author}</a>
-                                                </h6>
-                                                <p class="card-text">
-                                                    ${comment.content}
-                                                </p>
-                                                <a class="btn btn-sm btn-dark btn-reply" href="#commentForm" data-comment-id="${comment.id}" data-comment-username="${comment.author}">Ответить</a>
-                                                <hr/>
-                                                <time>${comment.time_create}</time>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>`;
-        if (comment.is_child) {
-            document.querySelector(`#comment-thread-${comment.parent_id}`).insertAdjacentHTML("beforeend", commentTemplate);
-        } else {
-            document.querySelector('.nested-comments').insertAdjacentHTML("beforeend", commentTemplate)
-        }
-        commentForm.reset()
-        commentFormSubmit.disabled = false;
-        commentFormSubmit.innerText = "Добавить комментарий";
-        commentFormParentInput.value = null;
-        replyUser();
-    } catch (error) {
-        console.error('Ошибка при создании комментария:', error);
-        commentFormSubmit.disabled = false;
-        commentFormSubmit.innerText = "Добавить комментарий";
+        // Инициализация кнопок сворачивания/разворачивания
+        document.querySelectorAll('.toggle-replies-btn').forEach(button => {
+            button.removeEventListener('click', toggleReplies);
+            button.addEventListener('click', toggleReplies);
+        });
     }
-}
+
+    // Обработчик для кнопки "Ответить"
+    function replyComment(e) {
+        e.preventDefault();
+        const commentUsername = this.dataset.commentUsername;
+        const commentId = this.dataset.commentId;
+
+        commentFormContent.value = `${commentUsername}, `;
+        commentFormContent.focus();
+        commentFormParentInput.value = commentId;
+
+        replyUsernameSpan.textContent = commentUsername;
+        replyToInfo.classList.remove('d-none');
+        commentForm.scrollIntoView({behavior: 'smooth'});
+    }
+
+    // Обработчик для кнопки отмены ответа
+    function cancelReply() {
+        commentFormParentInput.value = '';
+        replyToInfo.classList.add('d-none');
+        replyUsernameSpan.textContent = '';
+    }
+
+    // Обработчик для кнопки сворачивания/разворачивания ответов
+    function toggleReplies() {
+        const targetId = this.dataset.bsTarget;
+        const repliesContainer = document.querySelector(targetId);
+
+        if (repliesContainer) {
+            if (repliesContainer.classList.contains('show')) {
+                this.innerHTML = `Показать ответы (<span class="replies-count">${this.querySelector('.replies-count').textContent}</span>)`;
+            } else {
+                this.innerHTML = `Свернуть ответы (<span class="replies-count">${this.querySelector('.replies-count').textContent}</span>)`;
+            }
+        }
+    }
+
+    // --- Основная функция отправки комментария ---
+    commentForm.addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        commentFormSubmit.disabled = true;
+        commentFormSubmit.innerText = "Отправка...";
+
+        try {
+            const formData = new FormData(commentForm);
+
+            const response = await fetch(`/post/${commentPostId}/comments/create/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: formData,
+            });
+
+            // Проверяем статус ответа
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Server error: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                const parentId = commentFormParentInput.value;
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = data.comment_html.trim();
+
+                const newCommentNode = tempDiv.firstChild;
+
+                if (parentId) {
+                    const parentRepliesContainer = document.querySelector(`#replies-${parentId}`);
+                    if (parentRepliesContainer) {
+                        parentRepliesContainer.appendChild(newCommentNode);
+
+                        if (!parentRepliesContainer.classList.contains('show')) {
+                            const parentToggleButton = parentRepliesContainer.parentNode.querySelector('.toggle-replies-btn');
+                            if (parentToggleButton) {
+                                const bsCollapse = new bootstrap.Collapse(parentRepliesContainer, {toggle: false});
+                                bsCollapse.show();
+                                parentToggleButton.innerHTML = `Свернуть ответы (<span class="replies-count">${parentToggleButton.querySelector('.replies-count').textContent}</span>)`;
+                            }
+                        }
+
+                        // Обновляем счетчик ответов на родительской кнопке
+                        const parentToggleButtonCountSpan = parentRepliesContainer.parentNode.querySelector('.toggle-replies-btn .replies-count');
+                        if (parentToggleButtonCountSpan) {
+                            parentToggleButtonCountSpan.textContent = parseInt(parentToggleButtonCountSpan.textContent) + 1;
+                            const parentToggleButton = parentRepliesContainer.parentNode.querySelector('.toggle-replies-btn');
+                            if (parentToggleButton) {
+                                parentToggleButton.innerHTML = `Свернуть ответы (<span class="replies-count">${parentToggleButtonCountSpan.textContent}</span>)`;
+                            }
+                        }
+
+                    } else {
+                        document.querySelector('.nested-comments').appendChild(newCommentNode);
+                        console.warn(`Parent replies container with ID #replies-${parentId} not found. Appending as root comment.`);
+                    }
+                } else {
+                    document.querySelector('.nested-comments').appendChild(newCommentNode);
+                }
+
+                commentForm.reset();
+                cancelReply();
+                initializeCommentEventListeners();
+
+            } else {
+                console.error('Ошибка при добавлении комментария (success: false):', data.errors || data.error);
+            }
+        } catch (error) {
+            console.error('Произошла ошибка AJAX или сервера:', error);
+        } finally {
+            commentFormSubmit.disabled = false;
+            commentFormSubmit.innerText = "Добавить комментарий";
+        }
+    });
+
+    // Инициализируем слушатели при первой загрузке страницы
+    initializeCommentEventListeners();
+    if (cancelReplyBtn) {
+        cancelReplyBtn.addEventListener('click', cancelReply);
+    }
+});

@@ -1,0 +1,43 @@
+{% load mptt_tags static thumbnail %}
+
+<div class="comment-node {% if node.is_root_node %}root-comment{% else %}child-comment{% endif %}"
+     id="comment-node-{{ node.pk }}">
+    <ul id="comment-thread-{{ node.pk }}" class="list-unstyled mb-3">
+        <li class="card">
+            <div class="row g-0">
+                <div class="col-auto">
+                    <div class="p-2">
+                        {# Аватар автора комментария #}
+                        <img src="
+                                {% if node.author.profile.avatar %}{% thumbnail node.author.profile.avatar "70x70" crop="center" quality=80 %}{% else %}{% static 'images/avatars/default.png' %}{% endif %}"
+                             class="rounded-circle comment-avatar" 
+                             alt="{{ node.author.username }} аватар">
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card-body">
+                        <h6 class="card-title mb-1">
+                            <a href="{% url 'accounts:profile_detail' slug=node.author.profile.slug %}">{{ node.author.username }}</a>
+                            <small class="text-muted ms-2">{{ node.time_create|date:"d.m.Y H:i" }}</small>
+                        </h6>
+                        <p class="card-text">{{ node.content|linebreaksbr }}</p>
+                        <a class="btn btn-sm btn-dark btn-reply" href="#commentForm" data-comment-id="{{ node.pk }}"
+                           data-comment-username="{{ node.author.username }}">Ответить</a>
+
+                        {# Кнопка сворачивания/разворачивания ответов #}
+                        <button class="btn btn-sm btn-outline-secondary toggle-replies-btn ms-2"
+                                data-bs-toggle="collapse" data-bs-target="#replies-{{ node.pk }}" aria-expanded="false"
+                                aria-controls="replies-{{ node.pk }}">
+                            Показать ответы (0)
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+        </li>
+    </ul>
+
+    {# Контейнер для вложенных комментариев, который будет сворачиваться #}
+    <div id="replies-{{ node.pk }}" class="collapse" style="margin-left: 20px;">
+    </div>
+</div>

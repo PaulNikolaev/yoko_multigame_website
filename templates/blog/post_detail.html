@@ -2,49 +2,56 @@
 {% load mptt_tags %}
 {% load static %}
 {% load rating_tags %}
+{% load thumbnail %}
 
 {% block content %}
     <div class="card mb-3">
-        <div class="row">
-            <div class="col-4">
-                {% if post.thumbnail %}
-                    <img src="{{ post.thumbnail.url }}" class="card-img-top" alt="{{ post.title }}">
+        <div class="row g-0">
+            <div class="col-md-4">
+                {% if post.thumbnail and post.thumbnail.name != 'images/thumbnails/default.jpg' %}
+                    <img src="{% thumbnail post.thumbnail "600x400" crop="center" quality=85 %}"
+                         class="img-fluid rounded-start"
+                         alt="{{ post.title }}">
                 {% else %}
-                    <div class="d-flex align-items-center justify-content-center h-100">
-                        <p>Нет изображения</p>
-                    </div>
+                    <img src="{% static 'images/thumbnails/default.jpg' %}"
+                         class="img-fluid rounded-start"
+                         alt="Изображение не найдено">
                 {% endif %}
             </div>
-            <div class="col-8">
+            <div class="col-md-8">
                 <div class="card-body">
-                    <h5>{{ post.title }}</h5>
+                    <h5 class="card-title">{{ post.title }}</h5>
                     <p class="card-text">{{ post.description }}</p>
-                    <p class="card-text">{{ post.text }}</p>
-                    Категория:
-                    <a href="{% url 'blog:post_by_category' post.category.slug %}">
-                        {{ post.category.title }}
-                    </a> / Добавил: {{ post.author.username }} / <small>{{ post.time_create }}</small>
+                    <p class="card-text">{{ post.text|linebreaksbr }}</p> 
+
+                    <p class="card-text">
+                        <small class="text-muted">
+                            Категория: <a href="{% url 'blog:post_by_category' post.category.slug %}">{{ post.category.title }}</a>
+                            / Добавил: <a href="{% url 'accounts:profile_detail' post.author.profile.slug %}">{{ post.author.username }}</a>
+                            / <time>{{ post.time_create|date:"d.m.Y H:i" }}</time> 
+                        </small>
+                    </p>
                 </div>
             </div>
         </div>
-        {# Контейнер для кнопок рейтинга, чтобы JS мог его легко найти #}
-        <div class="rating-buttons" data-post-id="{{ post.id }}">
-            {# Используем наш пользовательский тег для получения значения #}
-            {# Он сам вернет пустую строку, если пользователь не аутентифицирован или не голосовал #}
-            {% get_user_rating_value post request.user as current_vote %}
+        {# Контейнер для кнопок рейтинга #}
+        <div class="card-footer d-flex justify-content-start align-items-center">
+            <div class="rating-buttons" data-post-id="{{ post.id }}">
+                {% get_user_rating_value post request.user as current_vote %}
 
-            <button class="btn btn-sm btn-outline-success like-button" data-value="1"
-                    data-current-vote="{{ current_vote }}">
-                👍
-            </button>
-            <button class="btn btn-sm btn-outline-danger dislike-button" data-value="-1"
-                    data-current-vote="{{ current_vote }}">
-                👎
-            </button>
-            <span class="rating-sum badge bg-secondary ms-2">{{ post.get_sum_rating }}</span>
+                <button class="btn btn-sm {% if current_vote == 1 %}btn-success{% else %}btn-outline-success{% endif %} like-button" data-value="1"
+                        data-current-vote="{{ current_vote }}">
+                    👍
+                </button>
+                <button class="btn btn-sm {% if current_vote == -1 %}btn-danger{% else %}btn-outline-danger{% endif %} dislike-button" data-value="-1"
+                        data-current-vote="{{ current_vote }}">
+                    👎
+                </button>
+                <span class="rating-sum badge bg-secondary ms-2">{{ post.get_sum_rating }}</span>
+            </div>
         </div>
     </div>
-    <div class="card border-0">
+    <div class="card border-0 mt-4">
         <div class="card-body">
             <h5 class="card-title">
                 Комментарии

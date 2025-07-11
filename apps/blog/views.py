@@ -2,11 +2,12 @@ from django.http import JsonResponse
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy, reverse
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, View
-from .models import Post, Category, Rating
+from .models import Post, Category, Rating, Comment
 from django.shortcuts import get_object_or_404, redirect, render
 from .forms import PostCreateForm, PostUpdateForm, CommentCreateForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from ..services.mixins import AuthorRequiredMixin
+from django.template.loader import render_to_string
 from django.template.defaultfilters import date as date_filter
 
 
@@ -112,42 +113,46 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 
     def form_invalid(self, form):
         if self.is_ajax():
-            return JsonResponse({'error': form.errors}, status=400)
+            return JsonResponse({'success': False, 'errors': form.errors.as_json()}, status=400)
         return super().form_invalid(form)
 
     def form_valid(self, form):
         comment = form.save(commit=False)
         post_pk = self.kwargs.get('pk')
         try:
-            post = Post.objects.get(pk=post_pk)
+            post = get_object_or_404(Post, pk=post_pk)
             comment.post = post
-        except Post.DoesNotExist:
+        except Exception:
             if self.is_ajax():
-                return JsonResponse({'error': 'Пост не найден.'}, status=404)
+                return JsonResponse({'success': False, 'error': 'Пост не найден.'}, status=404)
             return redirect('blog:home')
+
         comment.author = self.request.user
-        comment.parent_id = form.cleaned_data.get('parent')
+
+        parent_id = form.cleaned_data.get('parent')
+        if parent_id:
+            try:
+                comment.parent = Comment.objects.get(pk=parent_id)
+            except Comment.DoesNotExist:
+                comment.parent = None
+
         comment.save()
 
+        comment.refresh_from_db()
+
         if self.is_ajax():
-            profile_url = reverse('accounts:profile_detail', kwargs={'slug': comment.author.profile.slug})
-            formatted_time_create = date_filter(comment.time_create, 'j F Y г. H:i')
-            return JsonResponse({
-                'is_child': comment.is_child_node(),
-                'id': comment.id,
-                'author': comment.author.username,
-                'parent_id': comment.parent_id,
-                'time_create': formatted_time_create,
-                'avatar': comment.author.profile.avatar.url,
-                'content': comment.content,
-                'profile_url': profile_url
-            }, status=200)
+            comment_html = render_to_string(
+                'blog/comments/single_comment_node.html',
+                {'node': comment, 'request': self.request},
+            )
+            return JsonResponse({'success': True, 'comment_html': comment_html}, status=200)
 
         return redirect(reverse_lazy('blog:post_detail', kwargs={'slug': comment.post.slug}))
 
     def handle_no_permission(self):
         if self.is_ajax():
-            return JsonResponse({'error': 'Необходимо авторизоваться для добавления комментариев'}, status=400)
+            return JsonResponse({'success': False, 'error': 'Необходимо авторизоваться для добавления комментариев.'},
+                                status=403)
         return super().handle_no_permission()
 
     def get_success_url(self):

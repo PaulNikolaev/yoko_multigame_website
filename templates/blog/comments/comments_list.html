@@ -1,54 +1,162 @@
-{% load mptt_tags static %}
+{% load mptt_tags static thumbnail %}
+
 <div class="nested-comments">
-{% recursetree post.comments.all %}
-<ul id="comment-thread-{{ node.pk }}">
-    <li class="card border-0">
-        <div class="row">
-            <div class="col-md-2">
-                <img src="{{ node.author.profile.avatar.url }}" style="width: 100px;height: 100px;object-fit: cover;" alt="{{ node.author }}"/>
-            </div>
-            <div class="col-md-10">
-                <div class="card-body">
-                    <h6 class="card-title">
+    {% recursetree post.comments.all %}
+        <div class="comment-node {% if node.is_root_node %}root-comment{% else %}child-comment{% endif %}"
+             id="comment-node-{{ node.pk }}">
+            <ul id="comment-thread-{{ node.pk }}" class="list-unstyled mb-3">
+                <li class="card">
+                    <div class="row g-0">
+                        <div class="col-auto">
+                            <div class="p-2">
+                                {# Аватар автора комментария #}
+                                <img src="
+                                        {% if node.author.profile.avatar %}{% thumbnail node.author.profile.avatar "70x70" crop="center" quality=80 %}{% else %}{% static 'images/avatars/default.png' %}{% endif %}"
+                                     class="rounded-circle comment-avatar"
+                                     alt="{{ node.author.username }} аватар">
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card-body">
+                                <h6 class="card-title mb-1">
+                                    <a href="{% url 'accounts:profile_detail' slug=node.author.profile.slug %}">{{ node.author.username }}</a>
+                                    <small class="text-muted ms-2">{{ node.time_create|date:"d.m.Y H:i" }}</small>
+                                </h6>
+                                <p class="card-text">{{ node.content|linebreaksbr }}</p>
+                                <a class="btn btn-sm btn-dark btn-reply" href="#commentForm"
+                                   data-comment-id="{{ node.pk }}" data-comment-username="{{ node.author.username }}">Ответить</a>
 
-                        <a href="{% url 'accounts:profile_detail' slug=node.author.profile.slug %}">{{ node.author }}</a>
+                                {# Кнопка сворачивания/разворачивания ответов #}
+                                {% if not node.is_leaf_node %}
+                                    <button class="btn btn-sm btn-outline-secondary toggle-replies-btn ms-2"
+                                            data-bs-toggle="collapse" data-bs-target="#replies-{{ node.pk }}"
+                                            aria-expanded="true" aria-controls="replies-{{ node.pk }}">
+                                        Свернуть ответы (<span
+                                            class="replies-count">{{ node.get_descendant_count }}</span>)
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
 
-                    </h6>
-                    <p class="card-text">
-                        {{ node.content }}
-                    </p>
-                    <a class="btn btn-sm btn-dark btn-reply" href="#commentForm" data-comment-id="{{ node.pk }}" data-comment-username="{{ node.author }}">Ответить</a>
-                    <hr/>
-                    <time>{{ node.time_create }}</time>
-                </div>
+            {# Контейнер для вложенных комментариев, который будет сворачиваться #}
+            <div id="replies-{{ node.pk }}" class="collapse" style="margin-left: 20px;">
+                {{ children }}
             </div>
+    
         </div>
-    </li>
-     {% if not node.is_leaf_node %}
-        {{ children }}
-     {% endif %}
-</ul>
-{% endrecursetree %}
+    {% endrecursetree %}
 </div>
 
 {% if request.user.is_authenticated %}
-    <div class="card border-0">
-       <div class="card-body">
-          <h6 class="card-title">
-             Форма добавления комментария
-          </h6>
-          <form method="post" id="commentForm" name="commentForm" data-post-id="{{ post.pk }}"
-                action="{% url 'blog:comment_create_view' pk=post.pk %}">
-             {% csrf_token %}
-             {{ form }}
-             <div class="d-grid gap-2 d-md-block mt-2">
-                <button type="submit" class="btn btn-dark" id="commentSubmit">Добавить комментарий</button>
-             </div>
-          </form>
-       </div>
+    <div class="card border-0 mt-4">
+        <div class="card-body">
+            <h6 class="card-title">
+                Форма добавления комментария
+            </h6>
+            <div id="reply-to-info" class="alert alert-info py-2 d-none">
+                Ответ для: <span id="reply-username"></span>
+                <button type="button" class="btn-close float-end" aria-label="Отменить" id="cancel-reply-btn"></button>
+            </div>
+
+            <form method="post" id="commentForm" name="commentForm" data-post-id="{{ post.pk }}"
+                  action="{% url 'blog:comment_create_view' pk=post.pk %}">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="mb-3">
+                        {% if field.name == 'parent' %}
+                            {{ field }}
+                        {% else %}
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {% for error in field.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger mt-3">
+                        {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <div class="d-grid gap-2 d-md-block mt-2">
+                    <button type="submit" class="btn btn-dark" id="commentSubmit">Добавить комментарий</button>
+                </div>
+            </form>
+        </div>
     </div>
 {% endif %}
 
 {% block script %}
     <script src="{% static 'js/comments.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const commentForm = document.getElementById('commentForm');
+            const parentField = commentForm.querySelector('input[name="parent"]');
+            const replyButtons = document.querySelectorAll('.btn-reply');
+            const replyToInfo = document.getElementById('reply-to-info');
+            const replyUsernameSpan = document.getElementById('reply-username');
+            const cancelReplyBtn = document.getElementById('cancel-reply-btn');
+
+            // JavaScript для формы ответа и кнопки отмены
+            replyButtons.forEach(button => {
+                button.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const commentId = this.dataset.commentId;
+                    const commentUsername = this.dataset.commentUsername;
+
+                    if (parentField) {
+                        parentField.value = commentId;
+                    }
+
+                    replyUsernameSpan.textContent = commentUsername;
+                    replyToInfo.classList.remove('d-none');
+
+                    commentForm.scrollIntoView({behavior: 'smooth'});
+                });
+            });
+
+            if (cancelReplyBtn) {
+                cancelReplyBtn.addEventListener('click', function () {
+                    if (parentField) {
+                        parentField.value = '';
+                    }
+                    replyToInfo.classList.add('d-none');
+                    replyUsernameSpan.textContent = '';
+                });
+            }
+
+            // JavaScript для сворачивания/разворачивания комментариев
+            const toggleReplyButtons = document.querySelectorAll('.toggle-replies-btn');
+
+            toggleReplyButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    const targetId = this.dataset.bsTarget;
+                    const repliesContainer = document.querySelector(targetId);
+
+                    if (repliesContainer) {
+                        if (repliesContainer.classList.contains('show')) {
+                            this.innerHTML = `Показать ответы (<span class="replies-count">${this.querySelector('.replies-count').textContent}</span>)`;
+                        } else {
+                            this.innerHTML = `Свернуть ответы (<span class="replies-count">${this.querySelector('.replies-count').textContent}</span>)`;
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+    <style>
+        .comment-avatar {
+            width: 70px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+    </style>
 {% endblock %}
