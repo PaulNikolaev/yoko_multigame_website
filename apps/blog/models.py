@@ -1,3 +1,4 @@
+from django.contrib.postgres.indexes import GinIndex
 from django.db import models
 from django.db.models import Sum
 from django.core.validators import FileExtensionValidator
@@ -67,7 +68,9 @@ class Post(models.Model):
     class Meta:
         db_table = 'blog_post'
         ordering = ['-fixed', '-create']
-        indexes = [models.Index(fields=['-fixed', '-create', '-status'])]
+        indexes = [models.Index(fields=['-fixed', '-create', '-status']),
+                   GinIndex(fields=['title'], name='title_trgm_idx', opclasses=['gin_trgm_ops']),
+                   GinIndex(fields=['description'], name='desc_trgm_idx', opclasses=['gin_trgm_ops']),]
         verbose_name = 'Статья'
         verbose_name_plural = 'Статьи'
 

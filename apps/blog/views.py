@@ -1,14 +1,14 @@
 from django.http import JsonResponse
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy, reverse
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, View
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, View, FormView
 from .models import Post, Category, Rating, Comment
 from django.shortcuts import get_object_or_404, redirect, render
-from .forms import PostCreateForm, PostUpdateForm, CommentCreateForm
+from .forms import PostCreateForm, PostUpdateForm, CommentCreateForm, SearchForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from ..services.mixins import AuthorRequiredMixin
 from django.template.loader import render_to_string
-from django.template.defaultfilters import date as date_filter
+from django.contrib.postgres.search import TrigramSimilarity
 
 
 class PostListView(ListView):
@@ -199,6 +199,32 @@ class RatingCreateView(LoginRequiredMixin, View):  # LoginRequiredMixin уже �
         return JsonResponse({'rating_sum': post.get_sum_rating()})
 
 
+class PostSearchView(FormView, ListView):
+    template_name = 'blog/post_search.html'
+    form_class = SearchForm
+    context_object_name = 'results'
+    paginate_by = 5
+
+    def get_queryset(self):
+        query = self.request.GET.get('query')
+        if query:
+            form = self.get_form()
+            if form.is_valid():
+                query = form.cleaned_data['query']
+
+                results = Post.published.annotate(
+                    similarity=TrigramSimilarity('title', query),
+                ).filter(similarity__gt=0.1).order_by('-similarity')
+                return results
+        return Post.objects.none()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = self.get_form()
+        context['query'] = self.request.GET.get('query')
+        return context
+
+
 def tr_handler404(request, exception):
     """
     Обработка ошибки 404
@@ -227,3 +253,5 @@ def tr_handler403(request, exception):
         'title': 'Ошибка доступа: 403',
         'error_message': 'Доступ к этой странице ограничен',
     })
+
+

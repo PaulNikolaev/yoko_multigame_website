@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django_bootstrap5',
     'sorl.thumbnail',
     'apps.services',
+    'django.contrib.postgres',
     'apps.blog.apps.BlogConfig',
     'apps.accounts',
     'mptt',

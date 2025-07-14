@@ -1,0 +1,64 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block title %}Поиск{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Поиск статей</h1>
+
+    <form class="mb-4" action="{% url 'blog:post_search' %}" method="get">
+        {% csrf_token %} {# csrf_token здесь не строго обязателен для GET формы, но не повредит #}
+        <div class="input-group">
+            <input type="search" name="query" class="form-control" placeholder="Введите запрос..." value="{{ query }}">
+            <button class="btn btn-primary" type="submit">Поиск</button>
+        </div>
+        {% if form.query.errors %}
+            <div class="text-danger mt-1">
+                {% for error in form.query.errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </form>
+
+    {% if query %}
+        <h2>Результаты поиска для "{{ query }}"</h2>
+        {% if results %}
+            {% for post in results %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title"><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h5>
+                        <p class="card-text text-muted">
+                            Опубликовано: {{ post.time_create|date:"d.m.Y" }} | Автор: {{ post.author.username }}
+                        </p>
+                        <p class="card-text">{{ post.content|striptags|truncatechars:200 }}</p>
+                        {# Опционально: отобразить схожесть #}
+                        {# <p class="card-text"><small class="text-muted">Схожесть: {{ post.similarity|floatformat:"2" }}</small></p> #}
+                    </div>
+                </div>
+            {% endfor %}
+
+            {# Пагинация, если вы ее добавили в PostSearchView #}
+            {% if is_paginated %}
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item"><a class="page-link" href="?query={{ query }}&page={{ page_obj.previous_page_number }}">Предыдущая</a></li>
+                        {% endif %}
+                        <li class="page-item active"><a class="page-link" href="#">{{ page_obj.number }}</a></li>
+                        {% if page_obj.has_next %}
+                            <li class="page-item"><a class="page-link" href="?query={{ query }}&page={{ page_obj.next_page_number }}">Следующая</a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+
+        {% else %}
+            <p>По вашему запросу ничего не найдено.</p>
+        {% endif %}
+    {% else %}
+        <p>Введите запрос для поиска.</p>
+    {% endif %}
+</div>
+{% endblock %}

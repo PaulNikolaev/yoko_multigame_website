@@ -12,6 +12,11 @@
 
         {# Блок с навигацией и пользовательскими элементами #}
         <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            {# Форма поиска #}
+            <form class="d-flex me-3" role="search" action="{% url 'blog:post_search' %}" method="get">
+                <input class="form-control me-2" type="search" placeholder="Поиск статей..." aria-label="Поиск" name="query" value="{{ request.GET.query }}">
+                <button class="btn btn-outline-light" type="submit">Поиск</button>
+            </form>
             <ul class="navbar-nav">
                 {% if request.user.is_authenticated %}
                     {# Элементы для авторизованного пользователя #}
