@@ -1,21 +1,21 @@
 {% extends 'main.html' %}
 {% load static %}
 
-{% block title %}Поиск{% endblock %}
+{% block title %}{% if query %}Поиск: "{{ query }}"{% else %}Поиск статей{% endif %}{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <h1>Поиск статей</h1>
 
+    {# Форма поиска #}
     <form class="mb-4" action="{% url 'blog:post_search' %}" method="get">
-        {% csrf_token %} {# csrf_token здесь не строго обязателен для GET формы, но не повредит #}
         <div class="input-group">
-            <input type="search" name="query" class="form-control" placeholder="Введите запрос..." value="{{ query }}">
+            {{ search_form.query }}
             <button class="btn btn-primary" type="submit">Поиск</button>
         </div>
-        {% if form.query.errors %}
+        {% if search_form.query.errors %}
             <div class="text-danger mt-1">
-                {% for error in form.query.errors %}
+                {% for error in search_form.query.errors %}
                     {{ error }}
                 {% endfor %}
             </div>
@@ -24,22 +24,20 @@
 
     {% if query %}
         <h2>Результаты поиска для "{{ query }}"</h2>
-        {% if results %}
-            {% for post in results %}
+        {% if posts %}
+            {% for post in posts %}
                 <div class="card mb-3">
                     <div class="card-body">
                         <h5 class="card-title"><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h5>
                         <p class="card-text text-muted">
-                            Опубликовано: {{ post.time_create|date:"d.m.Y" }} | Автор: {{ post.author.username }}
+                            Опубликовано: {{ post.create|date:"d.m.Y" }} | Автор: {{ post.author.username }}
                         </p>
-                        <p class="card-text">{{ post.content|striptags|truncatechars:200 }}</p>
-                        {# Опционально: отобразить схожесть #}
-                        {# <p class="card-text"><small class="text-muted">Схожесть: {{ post.similarity|floatformat:"2" }}</small></p> #}
+                        <p class="card-text">{{ post.description|truncatechars:200 }}</p>
                     </div>
                 </div>
             {% endfor %}
 
-            {# Пагинация, если вы ее добавили в PostSearchView #}
+            {# Пагинация #}
             {% if is_paginated %}
                 <nav aria-label="Page navigation example">
                     <ul class="pagination justify-content-center">
@@ -58,7 +56,7 @@
             <p>По вашему запросу ничего не найдено.</p>
         {% endif %}
     {% else %}
-        <p>Введите запрос для поиска.</p>
+        <p>Введите запрос для поиска статей.</p>
     {% endif %}
 </div>
 {% endblock %}

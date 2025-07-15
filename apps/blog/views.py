@@ -9,6 +9,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from ..services.mixins import AuthorRequiredMixin
 from django.template.loader import render_to_string
 from django.contrib.postgres.search import TrigramSimilarity
+from django.db.models import Value
+from django.db.models.functions import Lower, Greatest
 
 
 class PostListView(ListView):
@@ -159,12 +161,10 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
         return reverse_lazy('blog:post_detail', kwargs={'slug': self.object.post.slug})
 
 
-class RatingCreateView(LoginRequiredMixin, View):  # LoginRequiredMixin уже требует аутентификацию
+class RatingCreateView(LoginRequiredMixin, View):
     model = Rating
 
     def post(self, request, *args, **kwargs):
-        # LoginRequiredMixin уже позаботился о неаутентифицированных пользователях,
-        # так что эта проверка обычно не нужна здесь, но как страховка не помешает.
         if not request.user.is_authenticated:
             return JsonResponse({'error': 'Вы должны быть зарегистрированы, чтобы ставить оценки.'}, status=403)
 
@@ -176,52 +176,54 @@ class RatingCreateView(LoginRequiredMixin, View):  # LoginRequiredMixin уже �
         except Post.DoesNotExist:
             return JsonResponse({'error': 'Запись не найдена.'}, status=404)
 
-        # Логика упрощается: всегда ищем по post и user, так как это unique_together
-        # и пользователь всегда аутентифицирован.
         rating, created = self.model.objects.get_or_create(
             post=post,
-            user=request.user,  # Теперь это наша уникальная пара
-            defaults={'value': value}  # Значение для новой записи
+            user=request.user,
+            defaults={'value': value}
         )
 
         if not created:
-            # Рейтинг уже существовал для этого пользователя и поста
             if rating.value == value:
-                # Если пользователь нажал ту же кнопку: отменяем голос
                 rating.delete()
             else:
-                # Если пользователь нажал другую кнопку: меняем голос
                 rating.value = value
                 rating.save()
 
-        # Обновляем объект post, чтобы получить актуальную сумму рейтинга
         post.refresh_from_db()
         return JsonResponse({'rating_sum': post.get_sum_rating()})
 
 
-class PostSearchView(FormView, ListView):
+class PostSearchView(ListView):
+    model = Post
     template_name = 'blog/post_search.html'
-    form_class = SearchForm
-    context_object_name = 'results'
+    context_object_name = 'posts'
     paginate_by = 5
 
     def get_queryset(self):
-        query = self.request.GET.get('query')
-        if query:
-            form = self.get_form()
-            if form.is_valid():
-                query = form.cleaned_data['query']
+        form = SearchForm(self.request.GET)
+        query = None
+        results = Post.objects.none()
 
-                results = Post.published.annotate(
-                    similarity=TrigramSimilarity('title', query),
-                ).filter(similarity__gt=0.1).order_by('-similarity')
-                return results
-        return Post.objects.none()
+        if form.is_valid():
+            query = form.cleaned_data['query']
+
+            if query:
+                lower_query_value = Value(query.lower())
+
+                SIMILARITY_THRESHOLD = 0.1
+
+                results = Post.custom.published().annotate(
+                    similarity=TrigramSimilarity(Lower('title'), lower_query_value)
+                ).filter(similarity__gt=SIMILARITY_THRESHOLD).order_by("-similarity")
+
+        self.query = query
+        return results
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['form'] = self.get_form()
-        context['query'] = self.request.GET.get('query')
+        context['title'] = 'Результаты поиска'
+        context["search_form"] = SearchForm(self.request.GET)
+        context['query'] = self.query
         return context
 
 

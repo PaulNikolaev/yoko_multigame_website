@@ -5,21 +5,19 @@
     <div class="container">
         <a class="navbar-brand" href="/">YOKO Multigame</a>
 
-        {# Кнопка-гамбургер для мобильных устройств #}
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
 
-        {# Блок с навигацией и пользовательскими элементами #}
         <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-            {# Форма поиска #}
+            {# ФОРМА ПОИСКА В НАВИГАЦИИ #}
             <form class="d-flex me-3" role="search" action="{% url 'blog:post_search' %}" method="get">
-                <input class="form-control me-2" type="search" placeholder="Поиск статей..." aria-label="Поиск" name="query" value="{{ request.GET.query }}">
+                <input class="form-control me-2" type="search" placeholder="Поиск статей..." aria-label="Поиск" name="query" value="{{ request.GET.query|default_if_none:'' }}">
                 <button class="btn btn-outline-light" type="submit">Поиск</button>
             </form>
+            
             <ul class="navbar-nav">
                 {% if request.user.is_authenticated %}
-                    {# Элементы для авторизованного пользователя #}
                     <li class="nav-item dropdown">
                         <a href="#" class="nav-link dropdown-toggle d-flex align-items-center" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             {% if request.user.profile.avatar %}
@@ -48,7 +46,6 @@
                         </ul>
                     </li>
                 {% else %}
-                    {# Элементы для неавторизованного пользователя #}
                     <li class="nav-item">
                         <a href="{% url 'accounts:register' %}" class="nav-link">Регистрация</a>
                     </li>

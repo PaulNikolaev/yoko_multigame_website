@@ -70,7 +70,8 @@ class Post(models.Model):
         ordering = ['-fixed', '-create']
         indexes = [models.Index(fields=['-fixed', '-create', '-status']),
                    GinIndex(fields=['title'], name='title_trgm_idx', opclasses=['gin_trgm_ops']),
-                   GinIndex(fields=['description'], name='desc_trgm_idx', opclasses=['gin_trgm_ops']),]
+                   GinIndex(fields=['description'], name='desc_trgm_idx', opclasses=['gin_trgm_ops']),
+                   ]
         verbose_name = 'Статья'
         verbose_name_plural = 'Статьи'
 
