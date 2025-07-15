@@ -186,4 +186,4 @@ fabric.properties
 
 nginx/ssl
 /media/
-#/cache_thumbnails/
+/cache_thumbnails/
