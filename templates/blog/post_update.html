@@ -11,7 +11,9 @@
                 {{ form.as_p }}
                 <div class="d-grid gap-2 d-md-block mt-2">
                     <button type="submit" class="btn btn-dark">Обновить статью</button>
+                    <a href="{% url 'blog:post_detail' post.slug %}" class="btn btn-outline-secondary">Отмена</a>
                 </div>
+                
             </form>
         </div>
     </div>

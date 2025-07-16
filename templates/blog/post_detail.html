@@ -4,38 +4,50 @@
 {% load rating_tags %}
 {% load thumbnail %}
 
+{% block title %}{{ post.title }}{% endblock %} {# Добавим заголовок страницы #}
+
 {% block content %}
     <div class="card mb-3">
-        <div class="row g-0">
-            <div class="col-md-4">
+        {# Блок для изображения #}
+        <div class="row g-0 justify-content-center"> {# Центрируем содержимое #}
+            <div class="col-md-8"> {# Изображение будет занимать 2/3 ширины #}
                 {% if post.thumbnail and post.thumbnail.name != 'images/thumbnails/default.jpg' %}
-                    <img src="{% thumbnail post.thumbnail "600x400" crop="center" quality=85 %}"
-                         class="img-fluid rounded-start"
+                    <img src="{% thumbnail post.thumbnail "800x600" crop="center" quality=85 %}" {# Увеличил размер для 2/3 ширины #}
+                         class="img-fluid rounded-top d-block mx-auto mt-3" {# d-block mx-auto для центрирования #}
                          alt="{{ post.title }}">
                 {% else %}
                     <img src="{% static 'images/thumbnails/default.jpg' %}"
-                         class="img-fluid rounded-start"
+                         class="img-fluid rounded-top d-block mx-auto mt-3"
                          alt="Изображение не найдено">
                 {% endif %}
             </div>
-            <div class="col-md-8">
-                <div class="card-body">
-                    <h5 class="card-title">{{ post.title }}</h5>
-                    <p class="card-text">{{ post.description }}</p>
-                    <p class="card-text">{{ post.text|linebreaksbr }}</p> 
+        </div>
 
-                    <p class="card-text">
-                        <small class="text-muted">
-                            Категория: <a href="{% url 'blog:post_by_category' post.category.slug %}">{{ post.category.title }}</a>
-                            / Добавил: <a href="{% url 'accounts:profile_detail' post.author.profile.slug %}">{{ post.author.username }}</a>
-                            / <time>{{ post.time_create|date:"d.m.Y H:i" }}</time> 
-                        </small>
-                    </p>
-                </div>
+        {# Блок для основного текста поста #}
+        <div class="card-body">
+            <h5 class="card-title">{{ post.title }}</h5>
+            <p class="card-text text-muted">
+                <small>
+                    Категория: <a href="{% url 'blog:post_by_category' post.category.slug %}">{{ post.category.title }}</a>
+                    / Добавил: <a href="{% url 'accounts:profile_detail' post.author.profile.slug %}">{{ post.author.username }}</a>
+                    / <time>{{ post.create|date:"d.m.Y H:i" }}</time> {# Используем post.create, так как это поле времени создания #}
+                    {% if post.updater %} {# Если есть обновивший пользователь #}
+                        / Обновлено: <a href="{% url 'accounts:profile_detail' post.updater.profile.slug %}">{{ post.updater.username }}</a>
+                        <time>{{ post.update|date:"d.m.Y H:i" }}</time>
+                    {% endif %}
+                </small>
+            </p>
+            
+            <p class="card-text lead">{{ post.description }}</p> {# Описание можно сделать крупнее #}
+            <hr> {# Разделитель между описанием и полным текстом #}
+            <div class="post-text"> {# Обернем полный текст для возможной стилизации #}
+                {{ post.text|linebreaksbr }}
             </div>
         </div>
-        {# Контейнер для кнопок рейтинга #}
-        <div class="card-footer d-flex justify-content-start align-items-center">
+
+        {# Контейнер для кнопок рейтинга и новых кнопок #}
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            {# Блок с кнопками рейтинга (слева) #}
             <div class="rating-buttons" data-post-id="{{ post.id }}">
                 {% get_user_rating_value post request.user as current_vote %}
 
@@ -49,8 +61,17 @@
                 </button>
                 <span class="rating-sum badge bg-secondary ms-2">{{ post.get_sum_rating }}</span>
             </div>
+
+            {# Блок с кнопками "Редактировать" и "На главную" (справа) #}
+            <div class="action-buttons">
+                {% if request.user.is_authenticated and request.user == post.author or request.user.is_staff or request.user.is_superuser %}
+                    <a href="{% url 'blog:post_update' post.slug %}" class="btn btn-warning btn-sm me-2">Редактировать</a>
+                {% endif %}
+                <a href="{% url 'blog:home' %}" class="btn btn-info btn-sm">На главную</a>
+            </div>
         </div>
     </div>
+
     <div class="card border-0 mt-4">
         <div class="card-body">
             <h5 class="card-title">
