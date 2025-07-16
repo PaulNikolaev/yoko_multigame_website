@@ -5,25 +5,28 @@
     <div class="container">
         <a class="navbar-brand" href="/">YOKO Multigame</a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
 
         <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
             {# ФОРМА ПОИСКА В НАВИГАЦИИ #}
             <form class="d-flex me-3" role="search" action="{% url 'blog:post_search' %}" method="get">
-                <input class="form-control me-2" type="search" placeholder="Поиск статей..." aria-label="Поиск" name="query" value="{{ request.GET.query|default_if_none:'' }}">
+                <input class="form-control me-2" type="search" placeholder="Поиск статей..." aria-label="Поиск"
+                       name="query" value="{{ request.GET.query|default_if_none:'' }}">
                 <button class="btn btn-outline-light" type="submit">Поиск</button>
             </form>
-            
+
             <ul class="navbar-nav">
                 {% if request.user.is_authenticated %}
                     <li class="nav-item dropdown">
-                        <a href="#" class="nav-link dropdown-toggle d-flex align-items-center" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a href="#" class="nav-link dropdown-toggle d-flex align-items-center" id="navbarDropdown"
+                           role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             {% if request.user.profile.avatar %}
                                 <img src="{% thumbnail request.user.profile.avatar "30x30" crop="center" quality=80 %}"
                                      alt="Аватар {{ request.user.username }}"
-                                     class="rounded-circle me-2" 
+                                     class="rounded-circle me-2"
                                      style="width: 30px; height: 30px; object-fit: cover;">
                             {% else %}
                                 <img src="{% static 'images/avatars/default.png' %}"
@@ -34,9 +37,18 @@
                             {{ request.user.username }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            {% if request.user.is_staff %}
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'admin:index' %}">Админка</a>
+                                </li>
+                            {% endif %}
                             <li><a class="dropdown-item" href="{% url 'blog:post_create' %}">Добавить статью</a></li>
-                            <li><a class="dropdown-item" href="{% url 'accounts:profile_detail' request.user.profile.slug %}">Мой профиль</a></li>
-                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item"
+                                   href="{% url 'accounts:profile_detail' request.user.profile.slug %}">Мой профиль</a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
                             <li>
                                 <form action="{% url 'accounts:logout' %}" method="post">
                                     {% csrf_token %}
