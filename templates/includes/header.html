@@ -43,6 +43,7 @@
                                 </li>
                             {% endif %}
                             <li><a class="dropdown-item" href="{% url 'blog:post_create' %}">Добавить статью</a></li>
+                            <li><a class="dropdown-item" href="{% url 'blog:my_posts' %}">Мои статьи</a></li>
                             <li><a class="dropdown-item"
                                    href="{% url 'accounts:profile_detail' request.user.profile.slug %}">Мой профиль</a>
                             </li>

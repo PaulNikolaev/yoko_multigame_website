@@ -1,0 +1,44 @@
+{# blog/user_posts.html #}
+{% extends 'main.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>{{ title }}</h1>
+
+    {% if posts %}
+        {% for post in posts %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title"><a href="{% url 'blog:post_detail' post.slug %}">{{ post.title }}</a></h5>
+                    <p class="card-text text-muted">
+                        Опубликовано: {{ post.create|date:"d.m.Y" }} | Категория: {{ post.category.title|default:"Без категории" }}
+                    </p>
+                    <p class="card-text">{{ post.description|truncatechars:200 }}</p>
+                </div>
+            </div>
+        {% endfor %}
+
+        {# Пагинация #}
+        {% if is_paginated %}
+            <nav aria-label="Page navigation example">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Предыдущая</a></li>
+                    {% endif %}
+                    <li class="page-item active"><a class="page-link" href="#">{{ page_obj.number }}</a></li>
+                    {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Следующая</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+
+    {% else %}
+        <p>Вы еще не опубликовали ни одной статьи.</p>
+        <p><a href="{% url 'blog:post_create' %}" class="btn btn-success">Создать первую статью</a></p>
+    {% endif %}
+</div>
+{% endblock %}

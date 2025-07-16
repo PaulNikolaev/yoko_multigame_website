@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import (PostListView,
+                    UserPostListView,
                     PostDetailView,
                     PostFromCategory,
                     PostCreateView,
@@ -18,4 +19,5 @@ urlpatterns = [
     path('category/<slug:slug>/', PostFromCategory.as_view(), name='post_by_category'),
     path('rating/', RatingCreateView.as_view(), name='rating'),
     path('search/', PostSearchView.as_view(), name='post_search'),
+    path('my-posts/', UserPostListView.as_view(), name='my_posts')
 ]
