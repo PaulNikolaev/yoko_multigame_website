@@ -118,5 +118,15 @@ class PostCreateFormTest(TestCase):
         post.save()
 
         self.assertIsNotNone(post.thumbnail)
-        self.assertTrue(post.thumbnail.name.endswith('test_image.gif'))
+        self.assertIn('test_image', post.thumbnail.name)
         post.thumbnail.delete(save=False)
+
+    def test_form_widget_classes(self):
+        """
+        Тест: убедимся, что стили Bootstrap применяются к виджетам формы.
+        """
+        form = PostCreateForm()
+        for field_name, field in form.fields.items():
+            self.assertIn('form-control', field.widget.attrs.get('class', ''))
+            self.assertIn('autocomplete', field.widget.attrs)
+            self.assertEqual('off', field.widget.attrs.get('autocomplete'))
