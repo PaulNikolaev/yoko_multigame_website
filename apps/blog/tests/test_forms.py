@@ -64,3 +64,28 @@ class PostCreateFormTest(TestCase):
         form = PostCreateForm(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertIn('description', form.errors)
+
+    def test_form_save(self):
+        """
+        Тест: форма должна создавать и сохранять объект Post в базе данных.
+        """
+        form_data = {
+            'title': 'Another Test Post',
+            'category': self.category.pk,
+            'description': 'Another description.',
+            'text': 'Another full text.',
+            'status': 'draft',
+        }
+        form = PostCreateForm(data=form_data)
+        self.assertTrue(form.is_valid(), f"Form is not valid before save: {form.errors}")
+
+        post = form.save(commit=False)
+        post.author = self.user
+        post.save()
+
+        self.assertEqual(Post.objects.count(), 1)
+        created_post = Post.objects.first()
+        self.assertEqual(created_post.title, 'Another Test Post')
+        self.assertEqual(created_post.author, self.user)
+        self.assertEqual(created_post.category, self.category)
+        self.assertEqual(created_post.status, 'draft')
