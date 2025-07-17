@@ -50,3 +50,17 @@ class PostCreateFormTest(TestCase):
         form = PostCreateForm(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertIn('title', form.errors)
+
+    def test_form_invalid_data_missing_description(self):
+        """
+        Тест: форма должна быть невалидна, если отсутствует обязательное поле 'description'.
+        """
+        form_data = {
+            'title': 'Test Post Title',
+            'category': self.category.pk,
+            'text': 'This is the full text of the test post.',
+            'status': 'published',
+        }
+        form = PostCreateForm(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('description', form.errors)
