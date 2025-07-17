@@ -89,3 +89,34 @@ class PostCreateFormTest(TestCase):
         self.assertEqual(created_post.author, self.user)
         self.assertEqual(created_post.category, self.category)
         self.assertEqual(created_post.status, 'draft')
+
+    def test_form_thumbnail_upload(self):
+        """
+        Тест: форма должна обрабатывать загрузку миниатюры.
+        """
+        image_content = b"GIF89a\x01\x00\x01\x00\x00\xff\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;"
+        thumbnail_file = SimpleUploadedFile(
+            "test_image.gif",
+            image_content,
+            content_type="image/gif"
+        )
+
+        form_data = {
+            'title': 'Post with Image',
+            'category': self.category.pk,
+            'description': 'Description with image.',
+            'text': 'Text with image.',
+            'status': 'published',
+        }
+        file_data = {'thumbnail': thumbnail_file}
+
+        form = PostCreateForm(data=form_data, files=file_data)
+        self.assertTrue(form.is_valid(), f"Form with image is not valid: {form.errors}")
+
+        post = form.save(commit=False)
+        post.author = self.user
+        post.save()
+
+        self.assertIsNotNone(post.thumbnail)
+        self.assertTrue(post.thumbnail.name.endswith('test_image.gif'))
+        post.thumbnail.delete(save=False)
