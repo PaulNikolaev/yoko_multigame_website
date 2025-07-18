@@ -203,3 +203,11 @@ class PostUpdateFormTest(TestCase):
         form = PostUpdateForm(data=form_data, instance=self.post)
         self.assertFalse(form.is_valid())
         self.assertIn('title', form.errors)
+
+    def test_form_fixed_widget_class(self):
+        """
+        Тест: убедится, что к виджету поля 'fixed' применен класс 'form-check-input'.
+        """
+        form = PostUpdateForm(instance=self.post)
+        self.assertIn('form-check-input', form.fields['fixed'].widget.attrs.get('class', ''))
+        self.assertIn('form-control', form.fields['title'].widget.attrs.get('class', ''))
