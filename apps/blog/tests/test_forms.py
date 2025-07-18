@@ -18,7 +18,6 @@ class PostCreateFormTest(TestCase):
     def setUpTestData(cls):
         """
         Настройка данных, которые будут использоваться всеми тестовыми методами класса.
-        Выполняется один раз для всего класса.
         """
         cls.user = User.objects.create_user(username='testuser', password='password123')
         cls.category = Category.objects.create(title='Test Category', slug='test-category')
@@ -123,7 +122,7 @@ class PostCreateFormTest(TestCase):
 
     def test_form_widget_classes(self):
         """
-        Тест: убедимся, что стили Bootstrap применяются к виджетам формы.
+        Тест: убедится, что стили Bootstrap применяются к виджетам формы.
         """
         form = PostCreateForm()
         for field_name, field in form.fields.items():
@@ -141,7 +140,6 @@ class PostUpdateFormTest(TestCase):
     def setUpTestData(cls):
         """
         Настройка данных, которые будут использоваться всеми тестовыми методами класса.
-        Выполняется один раз для всего класса.
         """
         cls.user = User.objects.create_user(username='testuser_update', password='password123')
         cls.category = Category.objects.create(title='Update Category', slug='update-category')
@@ -152,7 +150,7 @@ class PostUpdateFormTest(TestCase):
             text='Initial full text.',
             status='published',
             author=cls.user,
-            fixed=False  # Исходное состояние для обновления
+            fixed=False
         )
 
     def test_form_initial_data(self):
@@ -189,3 +187,19 @@ class PostUpdateFormTest(TestCase):
         self.assertEqual(updated_post.description, updated_description)
         self.assertEqual(updated_post.status, 'draft')
         self.assertTrue(updated_post.fixed)
+
+    def test_form_invalid_update_missing_title(self):
+        """
+        Тест: форма должна быть невалидна, если обязательное поле (например, title) отсутствует при обновлении.
+        """
+        form_data = {
+            'title': '',
+            'category': self.category.pk,
+            'description': 'Updated description.',
+            'text': self.post.text,
+            'status': 'published',
+            'fixed': False,
+        }
+        form = PostUpdateForm(data=form_data, instance=self.post)
+        self.assertFalse(form.is_valid())
+        self.assertIn('title', form.errors)
