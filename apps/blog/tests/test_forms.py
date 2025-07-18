@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
-from ..forms import PostCreateForm
+from ..forms import PostCreateForm, PostUpdateForm
 from ..models import Post, Category, Comment
 
 User = get_user_model()
@@ -130,3 +130,36 @@ class PostCreateFormTest(TestCase):
             self.assertIn('form-control', field.widget.attrs.get('class', ''))
             self.assertIn('autocomplete', field.widget.attrs)
             self.assertEqual('off', field.widget.attrs.get('autocomplete'))
+
+
+class PostUpdateFormTest(TestCase):
+    """
+    Тесты для формы PostUpdateForm
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        """
+        Настройка данных, которые будут использоваться всеми тестовыми методами класса.
+        Выполняется один раз для всего класса.
+        """
+        cls.user = User.objects.create_user(username='testuser_update', password='password123')
+        cls.category = Category.objects.create(title='Update Category', slug='update-category')
+        cls.post = Post.objects.create(
+            title='Initial Post Title',
+            category=cls.category,
+            description='Initial description.',
+            text='Initial full text.',
+            status='published',
+            author=cls.user,
+            fixed=False  # Исходное состояние для обновления
+        )
+
+    def test_form_initial_data(self):
+        """
+        Тест: форма должна инициализироваться данными существующего поста.
+        """
+        form = PostUpdateForm(instance=self.post)
+        self.assertEqual(form.initial['title'], self.post.title)
+        self.assertEqual(form.initial['category'], self.post.category.pk)
+        self.assertEqual(form.initial['fixed'], self.post.fixed)
