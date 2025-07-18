@@ -163,3 +163,29 @@ class PostUpdateFormTest(TestCase):
         self.assertEqual(form.initial['title'], self.post.title)
         self.assertEqual(form.initial['category'], self.post.category.pk)
         self.assertEqual(form.initial['fixed'], self.post.fixed)
+
+    def test_form_valid_update(self):
+        """
+        Тест: форма должна быть валидна с корректными данными для обновления.
+        """
+        updated_title = 'Updated Post Title'
+        updated_description = 'Updated description for the post.'
+        form_data = {
+            'title': updated_title,
+            'category': self.category.pk,
+            'description': updated_description,
+            'text': self.post.text,
+            'status': 'draft',
+            'fixed': True,
+        }
+        form = PostUpdateForm(data=form_data, instance=self.post)
+        self.assertTrue(form.is_valid(), f"Update Form is not valid: {form.errors}")
+
+        updated_post = form.save()
+
+        # Проверяем, что объект обновился, а не создался новый
+        self.assertEqual(updated_post.pk, self.post.pk)
+        self.assertEqual(updated_post.title, updated_title)
+        self.assertEqual(updated_post.description, updated_description)
+        self.assertEqual(updated_post.status, 'draft')
+        self.assertTrue(updated_post.fixed)
