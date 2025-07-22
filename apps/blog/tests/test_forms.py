@@ -242,6 +242,17 @@ class CommentCreateFormTest(TestCase):
         form_data = {
             'content': 'This is a test comment content.',
         }
-        # Parent поле не обязательно и скрыто, его можно не передавать
         form = CommentCreateForm(data=form_data)
         self.assertTrue(form.is_valid(), f"Comment form is not valid: {form.errors}")
+
+    def test_form_invalid_data_empty_content(self):
+        """
+        Тест: форма комментария должна быть невалидна, если содержимое пустое.
+        """
+        form_data = {
+            'content': '',
+        }
+        form = CommentCreateForm(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('content', form.errors)
+        self.assertIn('Обязательное поле.', form.errors['content'])
