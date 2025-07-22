@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
-from ..forms import PostCreateForm, PostUpdateForm, CommentCreateForm
+from ..forms import PostCreateForm, PostUpdateForm, CommentCreateForm, SearchForm
 from ..models import Post, Category, Comment
 
 User = get_user_model()
@@ -288,3 +288,20 @@ class CommentCreateFormTest(TestCase):
         self.assertEqual('Комментарий', form.fields['content'].widget.attrs.get('placeholder'))
         self.assertEqual(5, form.fields['content'].widget.attrs.get('rows'))
         self.assertEqual(30, form.fields['content'].widget.attrs.get('cols'))
+
+
+class SearchFormTest(TestCase):
+    """
+    Тесты для формы SearchForm
+    """
+
+    def test_form_valid_data_with_query(self):
+        """
+        Тест: форма поиска должна быть валидна с непустым запросом.
+        """
+        form_data = {
+            'query': 'test search term',
+        }
+        form = SearchForm(data=form_data)
+        self.assertTrue(form.is_valid(), f"Search form is not valid: {form.errors}")
+        self.assertEqual(form.cleaned_data['query'], 'test search term')
