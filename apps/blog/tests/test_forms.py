@@ -256,3 +256,25 @@ class CommentCreateFormTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn('content', form.errors)
         self.assertIn('Обязательное поле.', form.errors['content'])
+
+    def test_form_save_comment(self):
+        """
+        Тест: форма должна создавать и сохранять объект Comment в базе данных.
+        """
+        form_data = {
+            'content': 'A new comment for the post.',
+        }
+        form = CommentCreateForm(data=form_data)
+        self.assertTrue(form.is_valid(), f"Comment form is not valid before save: {form.errors}")
+
+        comment = form.save(commit=False)
+        comment.author = self.user
+        comment.post = self.post
+        comment.save()
+
+        self.assertEqual(Comment.objects.count(), 1)
+        created_comment = Comment.objects.first()
+        self.assertEqual(created_comment.content, 'A new comment for the post.')
+        self.assertEqual(created_comment.author, self.user)
+        self.assertEqual(created_comment.post, self.post)
+        self.assertEqual(created_comment.status, 'published')
