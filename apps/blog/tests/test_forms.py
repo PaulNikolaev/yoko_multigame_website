@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
-from ..forms import PostCreateForm, PostUpdateForm
+from ..forms import PostCreateForm, PostUpdateForm, CommentCreateForm
 from ..models import Post, Category, Comment
 
 User = get_user_model()
@@ -211,3 +211,37 @@ class PostUpdateFormTest(TestCase):
         form = PostUpdateForm(instance=self.post)
         self.assertIn('form-check-input', form.fields['fixed'].widget.attrs.get('class', ''))
         self.assertIn('form-control', form.fields['title'].widget.attrs.get('class', ''))
+
+
+class CommentCreateFormTest(TestCase):
+    """
+    Тесты для формы CommentCreateForm
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        """
+        Настройка данных, которые будут использоваться всеми тестовыми методами класса.
+        Для комментариев нужны пользователь и пост.
+        """
+        cls.user = User.objects.create_user(username='comment_author', password='password123')
+        cls.category = Category.objects.create(title='Comment Test Category', slug='comment-test-category')
+        cls.post = Post.objects.create(
+            title='Post for Comments',
+            category=cls.category,
+            description='This is a post to test comments.',
+            text='Full text of the post.',
+            status='published',
+            author=cls.user,
+        )
+
+    def test_form_valid_data(self):
+        """
+        Тест: форма комментария должна быть валидна с корректным содержимым.
+        """
+        form_data = {
+            'content': 'This is a test comment content.',
+        }
+        # Parent поле не обязательно и скрыто, его можно не передавать
+        form = CommentCreateForm(data=form_data)
+        self.assertTrue(form.is_valid(), f"Comment form is not valid: {form.errors}")
