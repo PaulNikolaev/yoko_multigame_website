@@ -316,3 +316,12 @@ class SearchFormTest(TestCase):
         form = SearchForm(data=form_data)
         self.assertTrue(form.is_valid(), f"Search form with empty query is not valid: {form.errors}")
         self.assertEqual(form.cleaned_data['query'], '')
+
+    def test_form_valid_data_no_query_field(self):
+        """
+        Тест: форма поиска должна быть валидна, если поле 'query' отсутствует в данных (required=False).
+        """
+        form_data = {}
+        form = SearchForm(data=form_data)
+        self.assertTrue(form.is_valid(), f"Search form with no query field is not valid: {form.errors}")
+        self.assertEqual(form.cleaned_data['query'], '')
