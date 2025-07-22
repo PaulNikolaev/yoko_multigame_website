@@ -325,3 +325,11 @@ class SearchFormTest(TestCase):
         form = SearchForm(data=form_data)
         self.assertTrue(form.is_valid(), f"Search form with no query field is not valid: {form.errors}")
         self.assertEqual(form.cleaned_data['query'], '')
+
+    def test_search_form_widget_styles(self):
+        """
+        Тест: убедимся, что стили Bootstrap применяются к виджетам формы SearchForm.
+        """
+        form = SearchForm()
+        self.assertIn('form-control', form.fields['query'].widget.attrs.get('class', ''))
+        self.assertEqual('Поиск статей...', form.fields['query'].widget.attrs.get('placeholder'))
