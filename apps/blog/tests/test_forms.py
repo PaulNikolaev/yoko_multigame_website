@@ -278,3 +278,13 @@ class CommentCreateFormTest(TestCase):
         self.assertEqual(created_comment.author, self.user)
         self.assertEqual(created_comment.post, self.post)
         self.assertEqual(created_comment.status, 'published')
+
+    def test_comment_form_widget_styles(self):
+        """
+        Тест: убедимся, что стили Bootstrap применяются к виджетам формы CommentCreateForm.
+        """
+        form = CommentCreateForm()
+        self.assertIn('form-control', form.fields['content'].widget.attrs.get('class', ''))
+        self.assertEqual('Комментарий', form.fields['content'].widget.attrs.get('placeholder'))
+        self.assertEqual(5, form.fields['content'].widget.attrs.get('rows'))
+        self.assertEqual(30, form.fields['content'].widget.attrs.get('cols'))
