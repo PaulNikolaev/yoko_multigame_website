@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 from django.contrib.messages.views import SuccessMessageMixin
-from django.urls import reverse_lazy, reverse
+from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, View, FormView
 from .models import Post, Category, Rating, Comment
 from django.shortcuts import get_object_or_404, redirect, render
@@ -10,7 +10,7 @@ from ..services.mixins import AuthorRequiredMixin
 from django.template.loader import render_to_string
 from django.contrib.postgres.search import TrigramSimilarity
 from django.db.models import Value
-from django.db.models.functions import Lower, Greatest
+from django.db.models.functions import Lower
 
 
 class PostListView(ListView):
