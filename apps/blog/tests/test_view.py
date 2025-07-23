@@ -78,3 +78,12 @@ class PostListViewTest(BlogViewsBaseTest):
         """
         response = self.client.get(reverse('blog:home'))
         self.assertTemplateUsed(response, 'blog/post_list.html')
+
+    def test_post_list_view_context_data(self):
+        """
+        Тест: Проверяем, что в контекст передаются правильные данные и заголовок.
+        """
+        response = self.client.get(reverse('blog:home'))
+        self.assertIn('posts', response.context)
+        self.assertIn('title', response.context)
+        self.assertEqual(response.context['title'], 'Главная страница')
