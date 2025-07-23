@@ -71,3 +71,10 @@ class PostListViewTest(BlogViewsBaseTest):
         """
         response = self.client.get(reverse('blog:home'))
         self.assertEqual(response.status_code, 200)
+
+    def test_post_list_view_uses_correct_template(self):
+        """
+        Тест: Проверяем, что используется правильный шаблон.
+        """
+        response = self.client.get(reverse('blog:home'))
+        self.assertTemplateUsed(response, 'blog/post_list.html')
