@@ -60,3 +60,14 @@ class BlogViewsBaseTest(TestCase):
         self.client = Client()
 
 
+class PostListViewTest(BlogViewsBaseTest):
+    """
+    Тесты для представления PostListView.
+    """
+
+    def test_post_list_view_status_code(self):
+        """
+        Тест: Проверяем, что страница списка постов загружается успешно (статус 200 OK).
+        """
+        response = self.client.get(reverse('blog:home'))
+        self.assertEqual(response.status_code, 200)
