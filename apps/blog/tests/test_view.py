@@ -173,3 +173,11 @@ class UserPostListViewTest(BlogViewsBaseTest):
 
         # Проверяем, что в списке нет постов другого пользователя
         self.assertNotIn(self.other_user_published_post, response.context['posts'])
+
+    def test_view_uses_correct_template(self):
+        """
+        Проверяет, что представление использует правильный шаблон.
+        """
+        self.client.login(username='testuser_views', password='password123')
+        response = self.client.get(reverse('blog:my_posts'))
+        self.assertTemplateUsed(response, 'blog/user_posts.html')
