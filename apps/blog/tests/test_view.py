@@ -4,7 +4,8 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 import tempfile
 import os
-
+from django.utils import timezone
+from datetime import timedelta
 from ..models import Post, Category, Comment
 from ..forms import PostCreateForm, PostUpdateForm, CommentCreateForm, SearchForm
 
@@ -12,78 +13,95 @@ User = get_user_model()
 
 
 class BlogViewsBaseTest(TestCase):
-    """
-    Базовый класс для настройки общих данных и клиента для всех тестов представлений.
-    """
-
     @classmethod
     def setUpTestData(cls):
-        cls.user = User.objects.create_user(username='testuser_views', password='password123')
-        cls.category = Category.objects.create(title='Test Category Views', slug='test-category-views')
+        cls.user = get_user_model().objects.create_user(
+            username='testuser_views',
+            email='test_views@example.com',
+            password='password123'
+        )
+        cls.category = Category.objects.create(
+            title='Test Category Views',
+            slug='test-category-views'
+        )
 
-        # Создаем опубликованный пост
-        cls.post_published = Post.objects.create(
-            title='Test Published Post',
-            slug='test-published-post',
-            description='Description for published post',
-            text='Full text for published post.',
-            category=cls.category,
+        # Создаем общие посты, которые могут использоваться во всех тестах
+        cls.published_post_1 = Post.objects.create(
+            title='Test Published Post 1',
+            slug='test-published-post-1',
+            description='Short description for published post 1',
+            text='Full text for published post 1',
             author=cls.user,
+            category=cls.category,
             status='published',
-            fixed=False
-        )
-        # Создаем черновик поста (не должен отображаться на главной странице)
-        cls.post_draft = Post.objects.create(
-            title='Test Draft Post',
-            slug='test-draft-post',
-            description='Description for draft post',
-            text='Full text for draft post.',
-            category=cls.category,
-            author=cls.user,
-            status='draft',
-            fixed=False
         )
 
-        for i in range(1, 7):
-            Post.objects.create(
-                title=f'Pagination Post {i}',
-                slug=f'pagination-post-{i}',
-                description=f'Description for pagination post {i}',
-                text=f'Full text for pagination post {i}.',
-                category=cls.category,
-                author=cls.user,
-                status='published',
-                fixed=False
-            )
+        cls.draft_post_1 = Post.objects.create(
+            title='Test Draft Post 1',
+            slug='test-draft-post-1',
+            description='Short description for draft post 1',
+            text='Full text for draft post 1',
+            author=cls.user,
+            category=cls.category,
+            status='draft',
+        )
 
     def setUp(self):
+        super().setUp()
         self.client = Client()
 
 
 class PostListViewTest(BlogViewsBaseTest):
-    """
-    Тесты для представления PostListView.
-    """
+    def setUp(self):
+        super().setUp()
 
-    def test_post_list_view_status_code(self):
+        # Создаем 5 черновиков для проверки того, что они не отображаются.
+        self.draft_posts = []
+        for i in range(5):
+            post = Post.objects.create(
+                title=f'Draft Post {i}',
+                slug=f'draft-post-{i}',
+                description=f'Description for draft post {i}',
+                text=f'Full text for draft post {i}',
+                author=self.user,
+                category=self.category,
+                status='draft',
+            )
+            self.draft_posts.append(post)
+
+    def test_post_list_view_url_exists_at_desired_location(self):
+        """Проверяет, что URL главной страницы доступен."""
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_post_list_view_uses_correct_template(self):
+        """Проверяет, что PostListView использует правильный шаблон."""
+        response = self.client.get(reverse('blog:home'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'blog/post_list.html')
+
+    def test_post_list_view_shows_only_published_posts(self):
         """
-        Тест: Проверяем, что страница списка постов загружается успешно (статус 200 OK).
+        Проверяет, что PostListView отображает только посты со статусом 'published'.
+        """
+        response = self.client.get(reverse('blog:home'))
+
+        # Проверяем, что в контексте содержатся только опубликованные посты
+        self.assertNotIn(self.draft_post_1, response.context['posts'])
+        self.assertIn(self.published_post_1, response.context['posts'])
+
+        # Также проверяем, что ни один из 5 черновиков не попал на страницу
+        for draft_post in self.draft_posts:
+            self.assertNotIn(draft_post, response.context['posts'])
+
+    def test_post_list_view_context_data(self):
+        """
+        Проверяет, что PostListView передает правильные данные в контекст.
         """
         response = self.client.get(reverse('blog:home'))
         self.assertEqual(response.status_code, 200)
 
-    def test_post_list_view_uses_correct_template(self):
-        """
-        Тест: Проверяем, что используется правильный шаблон.
-        """
-        response = self.client.get(reverse('blog:home'))
-        self.assertTemplateUsed(response, 'blog/post_list.html')
-
-    def test_post_list_view_context_data(self):
-        """
-        Тест: Проверяем, что в контекст передаются правильные данные и заголовок.
-        """
-        response = self.client.get(reverse('blog:home'))
-        self.assertIn('posts', response.context)
+        # Проверяем наличие и значение 'title'
         self.assertIn('title', response.context)
         self.assertEqual(response.context['title'], 'Главная страница')
+

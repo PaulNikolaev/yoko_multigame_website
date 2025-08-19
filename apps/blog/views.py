@@ -18,7 +18,7 @@ class PostListView(ListView):
     template_name = 'blog/post_list.html'
     context_object_name = 'posts'
     paginate_by = 5
-    queryset = Post.custom.all()
+    queryset = Post.custom.published()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
