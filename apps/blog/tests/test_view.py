@@ -148,3 +148,11 @@ class UserPostListViewTest(BlogViewsBaseTest):
         response = self.client.get(reverse('blog:my_posts'))
         self.assertEqual(response.status_code, 302)  # 302 Found
         self.assertRedirects(response, reverse('accounts:login') + '?next=' + reverse('blog:my_posts'))
+
+    def test_view_url_exists_for_authenticated_user(self):
+        """
+        Проверяет, что URL доступен для авторизованного пользователя.
+        """
+        self.client.login(username='testuser_views', password='password123')
+        response = self.client.get(reverse('blog:my_posts'))
+        self.assertEqual(response.status_code, 200)
