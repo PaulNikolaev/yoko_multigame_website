@@ -156,3 +156,20 @@ class UserPostListViewTest(BlogViewsBaseTest):
         self.client.login(username='testuser_views', password='password123')
         response = self.client.get(reverse('blog:my_posts'))
         self.assertEqual(response.status_code, 200)
+
+    def test_view_shows_only_current_users_published_posts(self):
+        """
+        Проверяет, что представление отображает только опубликованные посты
+        текущего пользователя.
+        """
+        self.client.login(username='testuser_views', password='password123')
+        response = self.client.get(reverse('blog:my_posts'))
+
+        # Проверяем, что в списке есть наши опубликованные посты
+        self.assertIn(self.my_published_post_1, response.context['posts'])
+
+        # Проверяем, что в списке нет наших черновиков
+        self.assertNotIn(self.my_draft_post_1, response.context['posts'])
+
+        # Проверяем, что в списке нет постов другого пользователя
+        self.assertNotIn(self.other_user_published_post, response.context['posts'])
