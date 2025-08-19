@@ -105,3 +105,46 @@ class PostListViewTest(BlogViewsBaseTest):
         self.assertIn('title', response.context)
         self.assertEqual(response.context['title'], 'Главная страница')
 
+
+class UserPostListViewTest(BlogViewsBaseTest):
+    def setUp(self):
+        super().setUp()
+        self.user = self.user  # Используем пользователя из родительского класса
+        self.other_user = User.objects.create_user(
+            username='otheruser',
+            email='other@example.com',
+            password='password123'
+        )
+
+        # Создаем посты для нашего пользователя
+        self.my_published_post_1 = Post.objects.create(
+            title='My Published Post 1',
+            slug='my-published-post-1',
+            text='text',
+            author=self.user,
+            status='published'
+        )
+        self.my_draft_post_1 = Post.objects.create(
+            title='My Draft Post 1',
+            slug='my-draft-post-1',
+            text='text',
+            author=self.user,
+            status='draft'
+        )
+
+        # Создаем посты для другого пользователя
+        self.other_user_published_post = Post.objects.create(
+            title='Other Users Published Post',
+            slug='other-users-published-post',
+            text='text',
+            author=self.other_user,
+            status='published'
+        )
+
+    def test_view_redirects_for_unauthenticated_user(self):
+        """
+        Проверяет, что неавторизованного пользователя перенаправляет на страницу входа.
+        """
+        response = self.client.get(reverse('blog:my_posts'))
+        self.assertEqual(response.status_code, 302)  # 302 Found
+        self.assertRedirects(response, reverse('accounts:login') + '?next=' + reverse('blog:my_posts'))
