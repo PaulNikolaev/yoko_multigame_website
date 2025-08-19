@@ -181,3 +181,11 @@ class UserPostListViewTest(BlogViewsBaseTest):
         self.client.login(username='testuser_views', password='password123')
         response = self.client.get(reverse('blog:my_posts'))
         self.assertTemplateUsed(response, 'blog/user_posts.html')
+
+    def test_view_context_data(self):
+        """
+        Проверяет, что в контекст передаются правильные данные.
+        """
+        self.client.login(username='testuser_views', password='password123')
+        response = self.client.get(reverse('blog:my_posts'))
+        self.assertEqual(response.context['title'], 'Мои статьи')
