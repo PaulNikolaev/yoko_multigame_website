@@ -201,3 +201,12 @@ class PostDetailViewTest(BlogViewsBaseTest):
         """Проверяет, что представление использует правильный шаблон."""
         response = self.client.get(reverse('blog:post_detail', args=[self.published_post_1.slug]))
         self.assertTemplateUsed(response, 'blog/post_detail.html')
+
+    def test_post_detail_view_context_data(self):
+        """Проверяет, что контекст содержит правильные данные."""
+        response = self.client.get(reverse('blog:post_detail', args=[self.published_post_1.slug]))
+
+        self.assertEqual(response.context['post'], self.published_post_1)
+        self.assertEqual(response.context['title'], self.published_post_1.title)
+        self.assertIsInstance(response.context['form'], CommentCreateForm)
+
