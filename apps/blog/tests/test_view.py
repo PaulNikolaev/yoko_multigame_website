@@ -189,3 +189,10 @@ class UserPostListViewTest(BlogViewsBaseTest):
         self.client.login(username='testuser_views', password='password123')
         response = self.client.get(reverse('blog:my_posts'))
         self.assertEqual(response.context['title'], 'Мои статьи')
+
+
+class PostDetailViewTest(BlogViewsBaseTest):
+    def test_post_detail_view_url_exists(self):
+        """Проверяет, что URL для опубликованного поста существует."""
+        response = self.client.get(reverse('blog:post_detail', args=[self.published_post_1.slug]))
+        self.assertEqual(response.status_code, 200)
