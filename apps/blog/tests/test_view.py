@@ -196,3 +196,8 @@ class PostDetailViewTest(BlogViewsBaseTest):
         """Проверяет, что URL для опубликованного поста существует."""
         response = self.client.get(reverse('blog:post_detail', args=[self.published_post_1.slug]))
         self.assertEqual(response.status_code, 200)
+
+    def test_post_detail_view_uses_correct_template(self):
+        """Проверяет, что представление использует правильный шаблон."""
+        response = self.client.get(reverse('blog:post_detail', args=[self.published_post_1.slug]))
+        self.assertTemplateUsed(response, 'blog/post_detail.html')
