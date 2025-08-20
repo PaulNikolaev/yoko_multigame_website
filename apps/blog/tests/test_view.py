@@ -216,3 +216,10 @@ class PostDetailViewTest(BlogViewsBaseTest):
         """
         response = self.client.get(reverse('blog:post_detail', args=['non-existent-slug']))
         self.assertEqual(response.status_code, 404)
+
+    def test_post_detail_view_does_not_show_draft_post(self):
+        """
+        Проверяет, что представление возвращает 404 для поста со статусом 'draft'.
+        """
+        response = self.client.get(reverse('blog:post_detail', args=[self.draft_post_1.slug]))
+        self.assertEqual(response.status_code, 404)
