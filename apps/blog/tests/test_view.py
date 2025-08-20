@@ -210,3 +210,9 @@ class PostDetailViewTest(BlogViewsBaseTest):
         self.assertEqual(response.context['title'], self.published_post_1.title)
         self.assertIsInstance(response.context['form'], CommentCreateForm)
 
+    def test_post_detail_view_for_nonexistent_post(self):
+        """
+        Проверяет, что представление возвращает 404 для несуществующего поста.
+        """
+        response = self.client.get(reverse('blog:post_detail', args=['non-existent-slug']))
+        self.assertEqual(response.status_code, 404)
