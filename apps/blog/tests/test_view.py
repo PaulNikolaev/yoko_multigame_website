@@ -223,3 +223,37 @@ class PostDetailViewTest(BlogViewsBaseTest):
         """
         response = self.client.get(reverse('blog:post_detail', args=[self.draft_post_1.slug]))
         self.assertEqual(response.status_code, 404)
+
+
+class PostFromCategoryTest(BlogViewsBaseTest):
+    def setUp(self):
+        super().setUp()
+
+        # Создаем вторую категорию и посты для нее
+        self.other_category = Category.objects.create(
+            title='Other Category',
+            slug='other-category'
+        )
+        self.post_in_other_category = Post.objects.create(
+            title='Post in Other Category',
+            slug='post-in-other-category',
+            text='Text for other category post',
+            author=self.user,
+            category=self.other_category,
+            status='published'
+        )
+        self.draft_in_other_category = Post.objects.create(
+            title='Draft in Other Category',
+            slug='draft-in-other-category',
+            text='Draft text for other category post',
+            author=self.user,
+            category=self.other_category,
+            status='draft'
+        )
+
+    def test_view_exists_for_valid_category(self):
+        """
+        Проверяет, что URL доступен для существующей категории.
+        """
+        response = self.client.get(reverse('blog:post_by_category', args=[self.category.slug]))
+        self.assertEqual(response.status_code, 200)
