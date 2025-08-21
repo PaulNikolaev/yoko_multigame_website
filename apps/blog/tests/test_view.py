@@ -351,3 +351,26 @@ class PostCreateViewTest(BlogViewsBaseTest):
         # Проверяем, что после создания происходит редирект
         expected_redirect_url = reverse('blog:post_detail', kwargs={'slug': new_post.slug})
         self.assertRedirects(response, expected_redirect_url, status_code=302, target_status_code=200)
+
+    def test_post_creation_with_invalid_data(self):
+        """Проверяет, что пост не создается с невалидными данными."""
+        initial_post_count = Post.objects.count()
+
+        form_data = {
+            'title': '',  # Невалидные данные (пустое поле)
+            'description': 'An invalid post description.',
+            'text': 'Invalid text.',
+            'category': self.category.pk,
+            'status': 'published',
+        }
+        response = self.client.post(self.url, data=form_data)
+
+        # Проверяем, что пост не был создан
+        self.assertEqual(Post.objects.count(), initial_post_count)
+
+        # Проверяем, что статус-код 200 (форма снова отображается)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'blog/post_create.html')
+
+        self.assertTrue(response.context['form'].errors)
+        self.assertIn('title', response.context['form'].errors)
