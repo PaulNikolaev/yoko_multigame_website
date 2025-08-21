@@ -301,3 +301,19 @@ class PostFromCategoryTest(BlogViewsBaseTest):
         """
         response = self.client.get(reverse('blog:post_by_category', args=[self.category.slug]))
         self.assertEqual(response.context['title'], f"Категория: {self.category.title}")
+
+
+class PostCreateViewTest(BlogViewsBaseTest):
+    def setUp(self):
+        super().setUp()
+        self.client.login(username='testuser_views', password='password123')
+        self.url = reverse('blog:post_create')
+
+    def test_view_redirects_for_unauthenticated_user(self):
+        """Проверяет, что неавторизованного пользователя перенаправляет."""
+        self.client.logout()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 302)
+        # Исправляем проверку редиректа, чтобы она учитывала параметр 'next'
+        expected_url = f"{reverse('blog:home')}?next={self.url}"
+        self.assertRedirects(response, expected_url, status_code=302, target_status_code=200)
