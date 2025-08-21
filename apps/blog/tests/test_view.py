@@ -257,3 +257,10 @@ class PostFromCategoryTest(BlogViewsBaseTest):
         """
         response = self.client.get(reverse('blog:post_by_category', args=[self.category.slug]))
         self.assertEqual(response.status_code, 200)
+
+    def test_view_uses_correct_template(self):
+        """
+        Проверяет, что представление использует правильный шаблон.
+        """
+        response = self.client.get(reverse('blog:post_by_category', args=[self.category.slug]))
+        self.assertTemplateUsed(response, 'blog/post_list.html')
