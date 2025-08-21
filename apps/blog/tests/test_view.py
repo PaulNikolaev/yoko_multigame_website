@@ -294,3 +294,10 @@ class PostFromCategoryTest(BlogViewsBaseTest):
         """
         response = self.client.get(reverse('blog:post_by_category', args=['non-existent-category']))
         self.assertEqual(response.status_code, 404)
+
+    def test_view_context_data(self):
+        """
+        Проверяет, что в контекст передается правильный заголовок.
+        """
+        response = self.client.get(reverse('blog:post_by_category', args=[self.category.slug]))
+        self.assertEqual(response.context['title'], f"Категория: {self.category.title}")
