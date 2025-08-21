@@ -325,3 +325,29 @@ class PostCreateViewTest(BlogViewsBaseTest):
         self.assertTemplateUsed(response, 'blog/post_create.html')
         self.assertEqual(response.context['title'], 'Добавление статьи на сайт')
         self.assertIsInstance(response.context['form'], PostCreateForm)
+
+    def test_post_creation_with_valid_data(self):
+        """Проверяет, что новый пост создается с валидными данными."""
+        initial_post_count = Post.objects.count()
+
+        form_data = {
+            'title': 'New Test Post',
+            'slug': 'new-test-post',
+            'description': 'A new test post description.',
+            'text': 'The full text of the new test post.',
+            'category': self.category.pk,
+            'status': 'published',
+        }
+        response = self.client.post(self.url, data=form_data)
+
+        # Проверяем, что количество постов увеличилось
+        self.assertEqual(Post.objects.count(), initial_post_count + 1)
+
+        # Проверяем, что новый пост был создан
+        new_post = Post.objects.get(title='New Test Post')
+        self.assertEqual(new_post.author, self.user)
+        self.assertEqual(new_post.status, 'published')
+
+        # Проверяем, что после создания происходит редирект
+        expected_redirect_url = reverse('blog:post_detail', kwargs={'slug': new_post.slug})
+        self.assertRedirects(response, expected_redirect_url, status_code=302, target_status_code=200)
