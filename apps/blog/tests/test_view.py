@@ -264,3 +264,16 @@ class PostFromCategoryTest(BlogViewsBaseTest):
         """
         response = self.client.get(reverse('blog:post_by_category', args=[self.category.slug]))
         self.assertTemplateUsed(response, 'blog/post_list.html')
+
+    def test_view_shows_only_posts_from_the_specified_category(self):
+        """
+        Проверяет, что представление показывает только опубликованные посты
+        из нужной категории.
+        """
+        response = self.client.get(reverse('blog:post_by_category', args=[self.category.slug]))
+
+        # Проверяем, что в списке есть посты из этой категории
+        self.assertIn(self.published_post_1, response.context['posts'])
+
+        # Проверяем, что в списке нет постов из другой категории
+        self.assertNotIn(self.post_in_other_category, response.context['posts'])
