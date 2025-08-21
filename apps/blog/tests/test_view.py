@@ -287,3 +287,10 @@ class PostFromCategoryTest(BlogViewsBaseTest):
 
         # Проверяем, что черновик из нужной категории не отображается
         self.assertNotIn(self.draft_post_1, response.context['posts'])
+
+    def test_view_returns_404_for_nonexistent_category(self):
+        """
+        Проверяет, что представление возвращает 404 для несуществующей категории.
+        """
+        response = self.client.get(reverse('blog:post_by_category', args=['non-existent-category']))
+        self.assertEqual(response.status_code, 404)
