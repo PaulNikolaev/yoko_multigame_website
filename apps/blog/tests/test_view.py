@@ -277,3 +277,13 @@ class PostFromCategoryTest(BlogViewsBaseTest):
 
         # Проверяем, что в списке нет постов из другой категории
         self.assertNotIn(self.post_in_other_category, response.context['posts'])
+
+    def test_view_does_not_show_drafts(self):
+        """
+        Проверяет, что представление не показывает черновики,
+        даже если они принадлежат нужной категории.
+        """
+        response = self.client.get(reverse('blog:post_by_category', args=[self.category.slug]))
+
+        # Проверяем, что черновик из нужной категории не отображается
+        self.assertNotIn(self.draft_post_1, response.context['posts'])

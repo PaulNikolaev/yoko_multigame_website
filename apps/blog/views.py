@@ -67,7 +67,7 @@ class PostFromCategory(ListView):
         Возвращает рецепты только для текущей категории.
         """
         self.category = get_object_or_404(Category, slug=self.kwargs['slug'])
-        return Post.custom.filter(category=self.category)
+        return Post.custom.published().filter(category=self.category)
 
     def get_context_data(self, **kwargs):
         """
