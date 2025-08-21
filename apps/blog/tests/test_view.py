@@ -317,3 +317,11 @@ class PostCreateViewTest(BlogViewsBaseTest):
         # Исправляем проверку редиректа, чтобы она учитывала параметр 'next'
         expected_url = f"{reverse('blog:home')}?next={self.url}"
         self.assertRedirects(response, expected_url, status_code=302, target_status_code=200)
+
+    def test_view_uses_correct_template_and_context(self):
+        """Проверяет, что используется правильный шаблон и контекст."""
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'blog/post_create.html')
+        self.assertEqual(response.context['title'], 'Добавление статьи на сайт')
+        self.assertIsInstance(response.context['form'], PostCreateForm)
