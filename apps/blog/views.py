@@ -27,7 +27,7 @@ class PostListView(ListView):
 
 
 class UserPostListView(LoginRequiredMixin, ListView):
-    model =  Post
+    model = Post
     template_name = 'blog/user_posts.html'
     context_object_name = 'posts'
     paginate_by = 5
@@ -101,9 +101,6 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
 
 class PostUpdateView(AuthorRequiredMixin, SuccessMessageMixin, UpdateView):
-    """
-    Представление: обновления материала на сайте
-    """
     model = Post
     template_name = 'blog/post_update.html'
     context_object_name = 'post'
@@ -273,5 +270,3 @@ def tr_handler403(request, exception):
         'title': 'Ошибка доступа: 403',
         'error_message': 'Доступ к этой странице ограничен',
     })
-
-

@@ -374,3 +374,21 @@ class PostCreateViewTest(BlogViewsBaseTest):
 
         self.assertTrue(response.context['form'].errors)
         self.assertIn('title', response.context['form'].errors)
+
+
+class PostUpdateViewTest(BlogViewsBaseTest):
+    def setUp(self):
+        super().setUp()
+        self.post = self.published_post_1
+        self.url = reverse('blog:post_update', kwargs={'slug': self.post.slug})
+
+    def test_view_redirects_for_unauthenticated_user(self):
+        """
+        Проверяет, что неавторизованного пользователя перенаправляет на страницу входа.
+        """
+        self.client.logout()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 302)
+        expected_url = f"{reverse('blog:home')}?next={self.url}"
+        self.assertRedirects(response, expected_url)
+
