@@ -399,3 +399,14 @@ class PostUpdateViewTest(BlogViewsBaseTest):
         self.client.login(username=self.user.username, password='password123')
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
+
+    def test_view_uses_correct_template_and_context(self):
+        """
+        Проверяет, что используется правильный шаблон и контекст.
+        """
+        self.client.login(username=self.user.username, password='password123')
+        response = self.client.get(self.url)
+        self.assertTemplateUsed(response, 'blog/post_update.html')
+        self.assertEqual(response.context['title'], f'Обновление статьи: {self.post.title}')
+        self.assertIsInstance(response.context['form'], PostUpdateForm)
+
