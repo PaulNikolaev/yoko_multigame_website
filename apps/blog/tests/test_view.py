@@ -438,3 +438,25 @@ class PostUpdateViewTest(BlogViewsBaseTest):
         expected_redirect_url = reverse('blog:post_detail', kwargs={'slug': self.post.slug})
         self.assertRedirects(response, expected_redirect_url, status_code=302, target_status_code=200)
 
+    def test_post_update_with_invalid_data(self):
+        """
+        Проверяет, что пост не обновляется с невалидными данными.
+        """
+        self.client.login(username=self.user.username, password='password123')
+        initial_title = self.post.title
+        form_data = {
+            'title': '',  # Невалидные данные
+            'description': self.post.description,
+            'text': self.post.text,
+            'category': self.post.category.pk,
+            'status': self.post.status,
+        }
+        response = self.client.post(self.url, data=form_data)
+
+        # Проверяем, что статус-код 200 (форма снова отображается)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'blog/post_update.html')
+
+        # Проверяем, что пост не был обновлен
+        self.post.refresh_from_db()
+        self.assertEqual(self.post.title, initial_title)
