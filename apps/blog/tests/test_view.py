@@ -410,3 +410,31 @@ class PostUpdateViewTest(BlogViewsBaseTest):
         self.assertEqual(response.context['title'], f'Обновление статьи: {self.post.title}')
         self.assertIsInstance(response.context['form'], PostUpdateForm)
 
+    def test_post_update_with_valid_data(self):
+        """
+        Проверяет, что пост успешно обновляется с валидными данными.
+        """
+        self.client.login(username=self.user.username, password='password123')
+        updated_title = 'Updated Title'
+        form_data = {
+            'title': updated_title,
+            'description': self.post.description,
+            'text': self.post.text,
+            'category': self.post.category.pk,
+            'status': self.post.status,
+        }
+        response = self.client.post(self.url, data=form_data)
+
+        # Перезагружаем пост из базы, чтобы проверить изменения
+        self.post.refresh_from_db()
+
+        # Проверяем, что поле 'title' было обновлено
+        self.assertEqual(self.post.title, updated_title)
+
+        # Проверяем, что поле 'updater' было установлено
+        self.assertEqual(self.post.updater, self.user)
+
+        # Проверяем редирект на страницу детали поста
+        expected_redirect_url = reverse('blog:post_detail', kwargs={'slug': self.post.slug})
+        self.assertRedirects(response, expected_redirect_url, status_code=302, target_status_code=200)
+
