@@ -392,3 +392,10 @@ class PostUpdateViewTest(BlogViewsBaseTest):
         expected_url = f"{reverse('blog:home')}?next={self.url}"
         self.assertRedirects(response, expected_url)
 
+    def test_view_allows_author(self):
+        """
+        Проверяет, что автор поста может получить доступ к странице обновления.
+        """
+        self.client.login(username=self.user.username, password='password123')
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
