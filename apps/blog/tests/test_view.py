@@ -460,3 +460,24 @@ class PostUpdateViewTest(BlogViewsBaseTest):
         # Проверяем, что пост не был обновлен
         self.post.refresh_from_db()
         self.assertEqual(self.post.title, initial_title)
+
+    def test_post_update_with_draft(self):
+        """
+        Проверяет, что черновик тоже можно обновить.
+        """
+        self.client.login(username=self.user.username, password='password123')
+        draft_url = reverse('blog:post_update', kwargs={'slug': self.draft_post_1.slug})
+        updated_title = 'Updated Draft Title'
+        form_data = {
+            'title': updated_title,
+            'description': self.draft_post_1.description,
+            'text': self.draft_post_1.text,
+            'category': self.draft_post_1.category.pk,
+            'status': 'published',  # Меняем статус на 'published'
+        }
+        response = self.client.post(draft_url, data=form_data)
+
+        self.draft_post_1.refresh_from_db()
+        self.assertEqual(self.draft_post_1.title, updated_title)
+        self.assertEqual(self.draft_post_1.status, 'published')
+        self.assertRedirects(response, reverse('blog:post_detail', kwargs={'slug': self.draft_post_1.slug}))
