@@ -533,3 +533,17 @@ class CommentCreateViewTest(BlogViewsBaseTest):
 
         self.assertEqual(Comment.objects.count(), initial_comment_count)
         self.assertEqual(response.status_code, 200)
+
+    def test_ajax_comment_creation_with_valid_data(self):
+        """Проверяет успешное создание комментария с помощью AJAX."""
+        self.client.login(username=self.user.username, password='password123')
+        initial_comment_count = Comment.objects.count()
+        form_data = {'content': 'This is an AJAX comment.'}
+        response = self.client.post(self.url, data=form_data, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        self.assertEqual(Comment.objects.count(), initial_comment_count + 1)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        response_data = response.json()
+        self.assertTrue(response_data['success'])
+        self.assertIn('comment_html', response_data)
