@@ -587,3 +587,16 @@ class CommentCreateViewTest(BlogViewsBaseTest):
         self.assertEqual(response.status_code, 200)
         new_comment = Comment.objects.last()
         self.assertIsNone(new_comment.parent)
+
+    def test_ajax_request_with_nonexistent_post_returns_404(self):
+        """Проверяет, что AJAX-запрос с несуществующим постом возвращает 404."""
+        self.client.login(username=self.user.username, password='password123')
+        invalid_url = reverse('blog:comment_create_view', kwargs={'pk': 99999})
+        form_data = {'content': 'This comment should not be created.'}
+        response = self.client.post(invalid_url, data=form_data, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        response_data = response.json()
+        self.assertFalse(response_data['success'])
+        self.assertIn('Пост не найден.', response_data['error'])
