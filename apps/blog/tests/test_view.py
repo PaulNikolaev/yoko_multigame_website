@@ -561,3 +561,16 @@ class CommentCreateViewTest(BlogViewsBaseTest):
         response_data = response.json()
         self.assertFalse(response_data['success'])
         self.assertIn('errors', response_data)
+
+    def test_ajax_comment_creation_with_parent_id(self):
+        """Проверяет, что комментарий с parent_id успешно создается."""
+        self.client.login(username=self.user.username, password='password123')
+        form_data = {
+            'content': 'This is a reply.',
+            'parent': self.parent_comment.pk
+        }
+        response = self.client.post(self.url, data=form_data, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        self.assertEqual(response.status_code, 200)
+        new_comment = Comment.objects.last()
+        self.assertEqual(new_comment.parent, self.parent_comment)
