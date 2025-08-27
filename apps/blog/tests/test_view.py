@@ -600,3 +600,13 @@ class CommentCreateViewTest(BlogViewsBaseTest):
         response_data = response.json()
         self.assertFalse(response_data['success'])
         self.assertIn('Пост не найден.', response_data['error'])
+
+    def test_regular_request_with_nonexistent_post_redirects(self):
+        """Проверяет, что обычный запрос с несуществующим постом перенаправляется на home."""
+        self.client.login(username=self.user.username, password='password123')
+        invalid_url = reverse('blog:comment_create_view', kwargs={'pk': 99999})
+        form_data = {'content': 'This comment should not be created.'}
+        response = self.client.post(invalid_url, data=form_data, HTTP_ACCEPT='text/html')
+
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('blog:home'))
