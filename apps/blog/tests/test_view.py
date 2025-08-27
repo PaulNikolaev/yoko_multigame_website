@@ -547,3 +547,17 @@ class CommentCreateViewTest(BlogViewsBaseTest):
         response_data = response.json()
         self.assertTrue(response_data['success'])
         self.assertIn('comment_html', response_data)
+
+    def test_ajax_comment_creation_with_invalid_data(self):
+        """Проверяет, что невалидный AJAX-запрос возвращает 400."""
+        self.client.login(username=self.user.username, password='password123')
+        initial_comment_count = Comment.objects.count()
+        form_data = {'content': ''}  # Невалидные данные
+        response = self.client.post(self.url, data=form_data, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        self.assertEqual(Comment.objects.count(), initial_comment_count)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        response_data = response.json()
+        self.assertFalse(response_data['success'])
+        self.assertIn('errors', response_data)
