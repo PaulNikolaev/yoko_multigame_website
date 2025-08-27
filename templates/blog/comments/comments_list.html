@@ -11,6 +11,7 @@
                             <div class="p-2">
                                 {# Аватар автора комментария #}
                                 <img src="
+                                        
                                         {% if node.author.profile.avatar %}{% thumbnail node.author.profile.avatar "70x70" crop="center" quality=80 %}{% else %}{% static 'images/avatars/default.png' %}{% endif %}"
                                      class="rounded-circle comment-avatar"
                                      alt="{{ node.author.username }} аватар">
@@ -23,8 +24,11 @@
                                     <small class="text-muted ms-2">{{ node.time_create|date:"d.m.Y H:i" }}</small>
                                 </h6>
                                 <p class="card-text">{{ node.content|linebreaksbr }}</p>
-                                <a class="btn btn-sm btn-dark btn-reply" href="#commentForm"
-                                   data-comment-id="{{ node.pk }}" data-comment-username="{{ node.author.username }}">Ответить</a>
+                                {% if request.user.is_authenticated %}
+                                    <a class="btn btn-sm btn-dark btn-reply" href="#commentForm"
+                                       data-comment-id="{{ node.pk }}"
+                                       data-comment-username="{{ node.author.username }}">Ответить</a>
+                                {% endif %}
 
                                 {# Кнопка сворачивания/разворачивания ответов #}
                                 {% if not node.is_leaf_node %}
@@ -45,7 +49,7 @@
             <div id="replies-{{ node.pk }}" class="collapse" style="margin-left: 20px;">
                 {{ children }}
             </div>
-    
+
         </div>
     {% endrecursetree %}
 </div>

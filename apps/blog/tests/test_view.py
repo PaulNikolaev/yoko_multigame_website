@@ -509,3 +509,17 @@ class CommentCreateViewTest(BlogViewsBaseTest):
         response_data = response.json()
         self.assertFalse(response_data['success'])
         self.assertEqual(response_data['error'], 'Необходимо авторизоваться для добавления комментариев.')
+
+    def test_comment_creation_with_valid_data_and_redirects(self):
+        """Проверяет успешное создание комментария и перенаправление."""
+        self.client.login(username=self.user.username, password='password123')
+        initial_comment_count = Comment.objects.count()
+        form_data = {'content': 'This is a new comment.'}
+
+        response = self.client.post(self.url, data=form_data, HTTP_ACCEPT='text/html')
+
+        self.assertEqual(Comment.objects.count(), initial_comment_count + 1)
+        new_comment = Comment.objects.last()
+        self.assertEqual(new_comment.author, self.user)
+        self.assertEqual(new_comment.post, self.post)
+        self.assertRedirects(response, reverse('blog:post_detail', kwargs={'slug': self.post.slug}))

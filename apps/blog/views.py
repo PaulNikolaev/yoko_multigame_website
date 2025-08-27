@@ -138,6 +138,7 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
         return super().form_invalid(form)
 
     def form_valid(self, form):
+        print("Вход в form_valid")
         comment = form.save(commit=False)
         post_pk = self.kwargs.get('pk')
         try:
@@ -162,12 +163,14 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
         comment.refresh_from_db()
 
         if self.is_ajax():
+            print("Это AJAX-запрос")
             comment_html = render_to_string(
                 'blog/comments/single_comment_node.html',
                 {'node': comment, 'request': self.request},
             )
             return JsonResponse({'success': True, 'comment_html': comment_html}, status=200)
-
+        else:
+            print("Это обычный запрос. Ожидаем перенаправление.")
         return redirect(reverse_lazy('blog:post_detail', kwargs={'slug': comment.post.slug}))
 
     def handle_no_permission(self):
