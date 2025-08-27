@@ -124,6 +124,17 @@ class PostUpdateView(AuthorRequiredMixin, SuccessMessageMixin, UpdateView):
 class CommentCreateView(LoginRequiredMixin, CreateView):
     login_url = 'blog:home'
     form_class = CommentCreateForm
+    template_name = 'blog/post_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        post_pk = self.kwargs.get('pk')
+        try:
+            post = get_object_or_404(Post, pk=post_pk)
+            context['post'] = post
+        except Exception:
+            pass
+        return context
 
     def get_permission_denied_url(self):
         return self.login_url

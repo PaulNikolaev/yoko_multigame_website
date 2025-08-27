@@ -499,7 +499,6 @@ class CommentCreateViewTest(BlogViewsBaseTest):
 
         self.url = reverse('blog:comment_create_view', kwargs={'pk': self.post.pk})
 
-
     def test_unauthenticated_user_receives_403_for_ajax_request(self):
         """Проверяет, что неавторизованный пользователь получает 403 при AJAX-запросе."""
         self.client.logout()
@@ -523,3 +522,14 @@ class CommentCreateViewTest(BlogViewsBaseTest):
         self.assertEqual(new_comment.author, self.user)
         self.assertEqual(new_comment.post, self.post)
         self.assertRedirects(response, reverse('blog:post_detail', kwargs={'slug': self.post.slug}))
+
+    def test_comment_creation_with_invalid_data_and_no_redirects(self):
+        """Проверяет, что невалидный запрос не создает комментарий."""
+        self.client.login(username=self.user.username, password='password123')
+        initial_comment_count = Comment.objects.count()
+        form_data = {'content': ''}  # Невалидные данные
+
+        response = self.client.post(self.url, data=form_data, HTTP_ACCEPT='text/html')
+
+        self.assertEqual(Comment.objects.count(), initial_comment_count)
+        self.assertEqual(response.status_code, 200)
