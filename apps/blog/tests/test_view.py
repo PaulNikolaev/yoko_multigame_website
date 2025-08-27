@@ -574,3 +574,16 @@ class CommentCreateViewTest(BlogViewsBaseTest):
         self.assertEqual(response.status_code, 200)
         new_comment = Comment.objects.last()
         self.assertEqual(new_comment.parent, self.parent_comment)
+
+    def test_ajax_comment_creation_with_invalid_parent_id(self):
+        """Проверяет, что невалидный parent_id игнорируется."""
+        self.client.login(username=self.user.username, password='password123')
+        form_data = {
+            'content': 'This is a reply with invalid parent.',
+            'parent': 99999  # Несуществующий ID
+        }
+        response = self.client.post(self.url, data=form_data, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        self.assertEqual(response.status_code, 200)
+        new_comment = Comment.objects.last()
+        self.assertIsNone(new_comment.parent)
