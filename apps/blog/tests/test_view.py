@@ -481,3 +481,31 @@ class PostUpdateViewTest(BlogViewsBaseTest):
         self.assertEqual(self.draft_post_1.title, updated_title)
         self.assertEqual(self.draft_post_1.status, 'published')
         self.assertRedirects(response, reverse('blog:post_detail', kwargs={'slug': self.draft_post_1.slug}))
+
+
+class CommentCreateViewTest(BlogViewsBaseTest):
+    def setUp(self):
+        super().setUp()
+
+        self.user = self.__class__.user
+        self.post = self.__class__.published_post_1
+
+        # Исправлено: теперь используется 'content' вместо 'text'
+        self.parent_comment = Comment.objects.create(
+            content='Parent comment text.',
+            post=self.post,
+            author=self.user
+        )
+
+        self.url = reverse('blog:comment_create_view', kwargs={'pk': self.post.pk})
+
+
+    def test_unauthenticated_user_receives_403_for_ajax_request(self):
+        """Проверяет, что неавторизованный пользователь получает 403 при AJAX-запросе."""
+        self.client.logout()
+        response = self.client.post(self.url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        response_data = response.json()
+        self.assertFalse(response_data['success'])
+        self.assertEqual(response_data['error'], 'Необходимо авторизоваться для добавления комментариев.')

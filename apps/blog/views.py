@@ -122,7 +122,11 @@ class PostUpdateView(AuthorRequiredMixin, SuccessMessageMixin, UpdateView):
 
 
 class CommentCreateView(LoginRequiredMixin, CreateView):
+    login_url = 'blog:home'
     form_class = CommentCreateForm
+
+    def get_permission_denied_url(self):
+        return self.login_url
 
     def is_ajax(self):
         return self.request.accepts("application/json") or self.request.headers.get(
