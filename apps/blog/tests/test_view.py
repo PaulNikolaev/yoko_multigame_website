@@ -652,3 +652,16 @@ class RatingCreateViewTest(BlogViewsBaseTest):
         updated_rating = Rating.objects.last()
         self.assertEqual(updated_rating.value, -1)
         self.assertEqual(response.json()['rating_sum'], -1)
+
+    def test_user_can_delete_rating_by_reselecting_same_value(self):
+        """Проверяет, что повторный выбор той же оценки удаляет её."""
+        self.client.login(username=self.user.username, password='password123')
+        # Создаем начальную оценку
+        rating = Rating.objects.create(post=self.post, user=self.user, value=1)
+        initial_rating_count = Rating.objects.count()
+
+        # Повторно отправляем ту же оценку
+        response = self.client.post(self.url, {'post_id': self.post.pk, 'value': 1})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Rating.objects.count(), initial_rating_count - 1)
+        self.assertEqual(response.json()['rating_sum'], 0)
