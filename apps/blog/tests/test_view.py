@@ -639,3 +639,16 @@ class RatingCreateViewTest(BlogViewsBaseTest):
         self.assertEqual(new_rating.post, self.post)
         self.assertEqual(new_rating.value, 1)
         self.assertEqual(response.json()['rating_sum'], 1)
+
+    def test_user_can_change_existing_rating(self):
+        """Проверяет, что пользователь может изменить свою оценку."""
+        self.client.login(username=self.user.username, password='password123')
+        # Создаем начальную оценку
+        Rating.objects.create(post=self.post, user=self.user, value=1)
+
+        # Обновляем оценку
+        response = self.client.post(self.url, {'post_id': self.post.pk, 'value': -1})
+        self.assertEqual(response.status_code, 200)
+        updated_rating = Rating.objects.last()
+        self.assertEqual(updated_rating.value, -1)
+        self.assertEqual(response.json()['rating_sum'], -1)
