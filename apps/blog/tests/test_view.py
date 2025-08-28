@@ -665,3 +665,11 @@ class RatingCreateViewTest(BlogViewsBaseTest):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Rating.objects.count(), initial_rating_count - 1)
         self.assertEqual(response.json()['rating_sum'], 0)
+
+    def test_post_not_found_returns_404(self):
+        """Проверяет, что если пост не найден, возвращается 404."""
+        self.client.login(username=self.user.username, password='password123')
+        non_existent_post_id = 99999
+        response = self.client.post(self.url, {'post_id': non_existent_post_id, 'value': 1})
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json(), {'error': 'Запись не найдена.'})
