@@ -627,3 +627,15 @@ class RatingCreateViewTest(BlogViewsBaseTest):
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.json(), {'error': 'Вы должны быть зарегистрированы, чтобы ставить оценки.'})
 
+    def test_authenticated_user_can_create_new_rating(self):
+        """Проверяет, что авторизованный пользователь может создать новую оценку."""
+        self.client.login(username=self.user.username, password='password123')
+        initial_rating_count = Rating.objects.count()
+        response = self.client.post(self.url, {'post_id': self.post.pk, 'value': 1})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Rating.objects.count(), initial_rating_count + 1)
+        new_rating = Rating.objects.last()
+        self.assertEqual(new_rating.user, self.user)
+        self.assertEqual(new_rating.post, self.post)
+        self.assertEqual(new_rating.value, 1)
+        self.assertEqual(response.json()['rating_sum'], 1)
