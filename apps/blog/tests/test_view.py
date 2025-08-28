@@ -6,7 +6,7 @@ import tempfile
 import os
 from django.utils import timezone
 from datetime import timedelta
-from ..models import Post, Category, Comment
+from ..models import Post, Category, Comment, Rating
 from ..forms import PostCreateForm, PostUpdateForm, CommentCreateForm, SearchForm
 
 User = get_user_model()
@@ -610,3 +610,20 @@ class CommentCreateViewTest(BlogViewsBaseTest):
 
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('blog:home'))
+
+
+class RatingCreateViewTest(BlogViewsBaseTest):
+
+    def setUp(self):
+        super().setUp()
+        self.user = self.__class__.user
+        self.post = self.__class__.published_post_1
+        self.url = reverse('blog:rating')
+
+    def test_unauthenticated_user_cannot_rate(self):
+        """Проверяет, что неавторизованный пользователь получает ошибку 403."""
+        self.client.logout()
+        response = self.client.post(self.url, {'post_id': self.post.pk, 'value': 1})
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json(), {'error': 'Вы должны быть зарегистрированы, чтобы ставить оценки.'})
+

@@ -194,10 +194,10 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 class RatingCreateView(LoginRequiredMixin, View):
     model = Rating
 
-    def post(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return JsonResponse({'error': 'Вы должны быть зарегистрированы, чтобы ставить оценки.'}, status=403)
+    def handle_no_permission(self):
+        return JsonResponse({'error': 'Вы должны быть зарегистрированы, чтобы ставить оценки.'}, status=403)
 
+    def post(self, request, *args, **kwargs):
         post_id = request.POST.get('post_id')
         value = int(request.POST.get('value'))
 
