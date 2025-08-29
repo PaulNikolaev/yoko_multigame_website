@@ -673,3 +673,37 @@ class RatingCreateViewTest(BlogViewsBaseTest):
         response = self.client.post(self.url, {'post_id': non_existent_post_id, 'value': 1})
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {'error': 'Запись не найдена.'})
+
+
+class PostSearchViewTest(BlogViewsBaseTest):
+    def setUp(self):
+        super().setUp()
+        self.search_url = reverse('blog:post_search')
+
+        # Создаём посты, которые будут использоваться для тестирования поиска
+        self.post_match_title = Post.custom.create(
+            title='Python web development tutorial',
+            # Использование 'text' вместо 'body'
+            text='A detailed tutorial on Django.',
+            author=self.user,
+        )
+        self.post_no_match = Post.custom.create(
+            title='Random article',
+            # Использование 'text' вместо 'body'
+            text='This article is not about Python.',
+            author=self.user,
+        )
+
+    ## Тесты на логику поиска
+
+    def test_search_with_valid_query_returns_matching_posts(self):
+        """Проверяет, что поиск с валидным запросом возвращает совпадающие посты."""
+        response = self.client.get(self.search_url, {'query': 'pyth'})
+        self.assertEqual(response.status_code, 200)
+
+        # Проверяем, что в результатах есть ровно 1 пост
+        self.assertEqual(len(response.context['posts']), 1)
+        self.assertIn(self.post_match_title, response.context['posts'])
+
+        # Проверяем, что в результатах нет поста, который не совпадает
+        self.assertNotIn(self.post_no_match, response.context['posts'])
