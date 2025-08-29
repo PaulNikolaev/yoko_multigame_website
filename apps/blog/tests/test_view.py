@@ -720,3 +720,10 @@ class PostSearchViewTest(BlogViewsBaseTest):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context['posts']), 0)
         self.assertIs(response.context['posts'].exists(), False)
+
+    def test_search_with_invalid_form_data_returns_no_posts(self):
+        """Проверяет, что невалидные данные формы не возвращают посты."""
+        # Умышленно передаем невалидные данные, например, пустой словарь
+        response = self.client.get(self.search_url, {})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['posts']), 0)
