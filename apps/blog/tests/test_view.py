@@ -727,3 +727,12 @@ class PostSearchViewTest(BlogViewsBaseTest):
         response = self.client.get(self.search_url, {})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context['posts']), 0)
+
+    ## Тесты на контекстные данные
+
+    def test_context_data_contains_correct_title(self):
+        """Проверяет, что контекст содержит правильный заголовок."""
+        response = self.client.get(self.search_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('title', response.context)
+        self.assertEqual(response.context['title'], 'Результаты поиска')
