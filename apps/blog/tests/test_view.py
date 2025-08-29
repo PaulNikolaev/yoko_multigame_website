@@ -744,3 +744,10 @@ class PostSearchViewTest(BlogViewsBaseTest):
         self.assertIn('search_form', response.context)
         self.assertIsInstance(response.context['search_form'], SearchForm)
 
+    def test_context_data_contains_query(self):
+        """Проверяет, что в контексте сохраняется поисковый запрос."""
+        query_string = 'django'
+        response = self.client.get(self.search_url, {'query': query_string})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('query', response.context)
+        self.assertEqual(response.context['query'], query_string)
