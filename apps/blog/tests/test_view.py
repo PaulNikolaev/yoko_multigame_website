@@ -707,3 +707,9 @@ class PostSearchViewTest(BlogViewsBaseTest):
 
         # Проверяем, что в результатах нет поста, который не совпадает
         self.assertNotIn(self.post_no_match, response.context['posts'])
+
+    def test_search_with_no_query_returns_no_posts(self):
+        """Проверяет, что пустой запрос не возвращает посты."""
+        response = self.client.get(self.search_url, {'query': ''})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['posts']), 0)
