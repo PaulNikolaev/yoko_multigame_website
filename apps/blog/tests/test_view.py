@@ -713,3 +713,10 @@ class PostSearchViewTest(BlogViewsBaseTest):
         response = self.client.get(self.search_url, {'query': ''})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context['posts']), 0)
+
+    def test_search_with_no_results_returns_empty_queryset(self):
+        """Проверяет, что поиск, не давший результатов, возвращает пустой набор."""
+        response = self.client.get(self.search_url, {'query': 'nonexistent'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['posts']), 0)
+        self.assertIs(response.context['posts'].exists(), False)
