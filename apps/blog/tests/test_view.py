@@ -736,3 +736,11 @@ class PostSearchViewTest(BlogViewsBaseTest):
         self.assertEqual(response.status_code, 200)
         self.assertIn('title', response.context)
         self.assertEqual(response.context['title'], 'Результаты поиска')
+
+    def test_context_data_contains_search_form(self):
+        """Проверяет, что в контексте есть форма поиска."""
+        response = self.client.get(self.search_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('search_form', response.context)
+        self.assertIsInstance(response.context['search_form'], SearchForm)
+
