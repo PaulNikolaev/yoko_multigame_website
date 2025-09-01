@@ -6,47 +6,8 @@ from django.http import HttpRequest, HttpResponse
 from ..models import Post, Category, Comment, Rating
 from ..forms import PostCreateForm, PostUpdateForm, CommentCreateForm, SearchForm
 from apps.blog.views import tr_handler403, tr_handler404, tr_handler500
-
+from ..tests.base import BlogViewsBaseTest
 User = get_user_model()
-
-
-class BlogViewsBaseTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = get_user_model().objects.create_user(
-            username='testuser_views',
-            email='test_views@example.com',
-            password='password123'
-        )
-        cls.category = Category.objects.create(
-            title='Test Category Views',
-            slug='test-category-views'
-        )
-
-        # Создаем общие посты, которые могут использоваться во всех тестах
-        cls.published_post_1 = Post.objects.create(
-            title='Test Published Post 1',
-            slug='test-published-post-1',
-            description='Short description for published post 1',
-            text='Full text for published post 1',
-            author=cls.user,
-            category=cls.category,
-            status='published',
-        )
-
-        cls.draft_post_1 = Post.objects.create(
-            title='Test Draft Post 1',
-            slug='test-draft-post-1',
-            description='Short description for draft post 1',
-            text='Full text for draft post 1',
-            author=cls.user,
-            category=cls.category,
-            status='draft',
-        )
-
-    def setUp(self):
-        super().setUp()
-        self.client = Client()
 
 
 class PostListViewTest(BlogViewsBaseTest):
