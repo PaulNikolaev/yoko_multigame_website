@@ -781,3 +781,16 @@ class ErrorHandlersTest(TestCase):
         # Проверяем, что в содержимом ответа есть конкретные строки из шаблона
         self.assertIn('Ошибка сервера: 500'.encode('utf-8'), response.content)
         self.assertIn('Внутренняя ошибка сайта'.encode('utf-8'), response.content)
+
+    def test_handler403_renders_correctly(self):
+        """
+        Проверяет, что обработчик 403 возвращает правильную страницу и статус.
+        """
+        request = HttpRequest()
+        response = tr_handler403(request, exception=PermissionDenied())
+
+        self.assertIsInstance(response, HttpResponse)
+        self.assertEqual(response.status_code, 403)
+        # Проверяем, что в содержимом ответа есть конкретные строки из шаблона
+        self.assertIn('Ошибка доступа: 403'.encode('utf-8'), response.content)
+        self.assertIn('Доступ к этой странице ограничен'.encode('utf-8'), response.content)
