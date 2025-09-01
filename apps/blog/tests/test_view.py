@@ -769,3 +769,15 @@ class ErrorHandlersTest(TestCase):
         self.assertEqual(response.context['error_message'],
                          'К сожалению такая страница была не найдена, или перемещена')
 
+    def test_handler500_renders_correctly(self):
+        """
+        Проверяет, что обработчик 500 возвращает правильную страницу и статус.
+        """
+        request = HttpRequest()
+        response = tr_handler500(request)
+
+        self.assertIsInstance(response, HttpResponse)
+        self.assertEqual(response.status_code, 500)
+        # Проверяем, что в содержимом ответа есть конкретные строки из шаблона
+        self.assertIn('Ошибка сервера: 500'.encode('utf-8'), response.content)
+        self.assertIn('Внутренняя ошибка сайта'.encode('utf-8'), response.content)
