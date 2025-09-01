@@ -1,13 +1,11 @@
-from django.test import TestCase, Client
+from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.contrib.auth import get_user_model
-from django.core.files.uploadedfile import SimpleUploadedFile
-import tempfile
-import os
-from django.utils import timezone
-from datetime import timedelta
+from django.core.exceptions import PermissionDenied
+from django.http import HttpRequest, HttpResponse
 from ..models import Post, Category, Comment, Rating
 from ..forms import PostCreateForm, PostUpdateForm, CommentCreateForm, SearchForm
+from apps.blog.views import tr_handler403, tr_handler404, tr_handler500
 
 User = get_user_model()
 
@@ -751,3 +749,23 @@ class PostSearchViewTest(BlogViewsBaseTest):
         self.assertEqual(response.status_code, 200)
         self.assertIn('query', response.context)
         self.assertEqual(response.context['query'], query_string)
+
+
+@override_settings(DEBUG=False)
+class ErrorHandlersTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+    def test_handler404_renders_correctly(self):
+        """Проверяет, что обработчик 404 возвращает правильную страницу и статус."""
+        # Используем Client для запроса несуществующего URL, чтобы вызвать обработчик 404.
+        response = self.client.get('/some-non-existent-url/')
+
+        self.assertEqual(response.status_code, 404)
+        self.assertTemplateUsed(response, 'errors/error_page.html')
+        self.assertIn('title', response.context)
+        self.assertIn('error_message', response.context)
+        self.assertEqual(response.context['title'], 'Страница не найдена: 404')
+        self.assertEqual(response.context['error_message'],
+                         'К сожалению такая страница была не найдена, или перемещена')
+
