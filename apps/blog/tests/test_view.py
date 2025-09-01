@@ -6,7 +6,7 @@ from django.http import HttpRequest, HttpResponse
 from ..models import Post, Category, Comment, Rating
 from ..forms import PostCreateForm, PostUpdateForm, CommentCreateForm, SearchForm
 from apps.blog.views import tr_handler403, tr_handler404, tr_handler500
-from ..tests.base import BlogViewsBaseTest
+from apps.blog.tests.base import BlogViewsBaseTest
 User = get_user_model()
 
 
