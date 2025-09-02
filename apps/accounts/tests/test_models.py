@@ -88,11 +88,15 @@ class ProfileModelTest(AccountsBaseTest):
 
     def test_profile_bio_max_length(self):
         """Проверяет, что поле bio не превышает максимальную длину, используя full_clean()."""
-        long_bio = 'a' * 501  # Строка, превышающая 500 символов
+        long_bio = 'a' * 501
         self.profile.bio = long_bio
 
         with self.assertRaises(ValidationError) as cm:
             self.profile.full_clean()
 
-        # Дополнительная проверка, чтобы убедиться, что ошибка связана именно с полем bio
         self.assertIn('bio', cm.exception.message_dict)
+
+    def test_profile_str_representation(self):
+        """Проверяет строковое представление объекта Profile."""
+        self.assertEqual(str(self.profile), self.user.username)
+
