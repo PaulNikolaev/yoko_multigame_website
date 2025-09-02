@@ -72,3 +72,16 @@ class ProfileModelTest(AccountsBaseTest):
         # Удаляем файл после теста, чтобы не засорять медиа-папку
         if os.path.exists(self.profile.avatar.path):
             os.remove(self.profile.avatar.path)
+
+    def test_avatar_file_extension_validator(self):
+        """Проверяет, что валидатор FileExtensionValidator работает корректно."""
+        text_file = SimpleUploadedFile(
+            name='test.txt',
+            content=b'some text',
+            content_type='text/plain'
+        )
+
+        # Попытка присвоить файл с некорректным расширением должна вызвать ValidationError
+        with self.assertRaises(ValidationError):
+            self.profile.avatar = text_file
+            self.profile.full_clean()
