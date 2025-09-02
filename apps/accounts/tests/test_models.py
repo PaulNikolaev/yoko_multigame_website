@@ -100,3 +100,20 @@ class ProfileModelTest(AccountsBaseTest):
         """Проверяет строковое представление объекта Profile."""
         self.assertEqual(str(self.profile), self.user.username)
 
+    def test_profile_on_user_delete_cascade(self):
+        """
+        Проверяет, что профиль удаляется при удалении связанного пользователя
+        (благодаря on_delete=models.CASCADE).
+        """
+        # Создаем нового пользователя и его профиль
+        user_to_delete = User.objects.create_user(username='delete_me', password='password')
+        profile_to_delete = Profile.objects.get(user=user_to_delete)
+
+        # Убеждаемся, что профиль существует
+        self.assertTrue(Profile.objects.filter(pk=profile_to_delete.pk).exists())
+
+        # Удаляем пользователя
+        user_to_delete.delete()
+
+        # Проверяем, что профиль был также удален
+        self.assertFalse(Profile.objects.filter(pk=profile_to_delete.pk).exists())
