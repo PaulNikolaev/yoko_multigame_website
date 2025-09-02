@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from pytils.translit import slugify
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
+from django.db.utils import DataError
 from apps.accounts.models import Profile
 from apps.accounts.tests.base import AccountsBaseTest
 
@@ -85,3 +85,14 @@ class ProfileModelTest(AccountsBaseTest):
         with self.assertRaises(ValidationError):
             self.profile.avatar = text_file
             self.profile.full_clean()
+
+    def test_profile_bio_max_length(self):
+        """Проверяет, что поле bio не превышает максимальную длину, используя full_clean()."""
+        long_bio = 'a' * 501  # Строка, превышающая 500 символов
+        self.profile.bio = long_bio
+
+        with self.assertRaises(ValidationError) as cm:
+            self.profile.full_clean()
+
+        # Дополнительная проверка, чтобы убедиться, что ошибка связана именно с полем bio
+        self.assertIn('bio', cm.exception.message_dict)
